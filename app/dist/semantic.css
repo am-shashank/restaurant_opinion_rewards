@@ -12793,8 +12793,9 @@ ol.ui.horizontal.list li:before,
 
 .ui.inverted.segment,
 .ui.inverted.black.segment {
-  background-color: #1b1c1d !important;
-  color: #ffffff !important;
+  background-image: url(images/display_image.jpg);
+  /*background-color: #1b1c1d !important;
+  color: #ffffff !important;*/
 }
 
 .ui.inverted.blue.segment {
@@ -12885,10 +12886,12 @@ ol.ui.horizontal.list li:before,
   color: #ffffff;
 }
 
+
 .ui.inverted.segment,
 .ui.primary.inverted.segment {
-  background-color: #1b1c1d;
-  color: #ffffff;
+  background-image: url(../html/images/display_image.jpg);
+  /*background-color: #1b1c1d;
+  color: #ffffff;*/
 }
 
 .ui.inverted.block.segment,
@@ -12901,7 +12904,7 @@ ol.ui.horizontal.list li:before,
 --------------------*/
 
 .ui.secondary.segment {
-  background: #faf9fa;
+  background: #3063A5;
   color: rgba(0, 0, 0, 0.8);
 }
 

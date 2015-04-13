@@ -12,112 +12,6 @@ from __future__ import unicode_literals
 from django.db import models
 
 
-class Bill(models.Model):
-    id = models.IntegerField()
-    restaurant = models.ForeignKey('Restaurant')
-    amount = models.IntegerField(blank=True, null=True)
-    image = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Bill'
-        unique_together = (('id', 'restaurant_id'),)
-
-
-class Choice(models.Model):
-    id = models.IntegerField(primary_key=True)
-    text = models.CharField(max_length=20, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Choice'
-
-
-class HasBill(models.Model):
-    item_name = models.ForeignKey('Item', db_column='item_name')
-    restaurant = models.ForeignKey('Item')
-    bill = models.ForeignKey(Bill)
-
-    class Meta:
-        managed = False
-        db_table = 'Has_Bill'
-        unique_together = (('item_name', 'bill_id', 'restaurant_id'),)
-
-
-class HasChoice(models.Model):
-    question = models.ForeignKey('Question')
-    choice = models.ForeignKey(Choice)
-
-    class Meta:
-        managed = False
-        db_table = 'Has_Choice'
-        unique_together = (('question_id', 'choice_id'),)
-
-
-class HasQuestion(models.Model):
-    survey = models.ForeignKey('Survey')
-    question = models.ForeignKey('Question')
-
-    class Meta:
-        managed = False
-        db_table = 'Has_Question'
-        unique_together = (('survey_id', 'question_id'),)
-
-
-class Item(models.Model):
-    name = models.CharField(max_length=80)
-    price = models.FloatField(blank=True, null=True)
-    restaurant = models.ForeignKey('Restaurant')
-
-    class Meta:
-        managed = False
-        db_table = 'Item'
-        unique_together = (('name', 'restaurant_id'),)
-
-
-class Login(models.Model):
-    user = models.ForeignKey('User', primary_key=True)
-    facebook_id = models.CharField(max_length=20, blank=True, null=True)
-    password = models.CharField(max_length=20, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Login'
-
-
-class Question(models.Model):
-    id = models.IntegerField(primary_key=True)
-    text = models.CharField(max_length=100, blank=True, null=True)
-    flag = models.IntegerField(blank=True, null=True)
-    category = models.CharField(max_length=20, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Question'
-
-
-class Refers(models.Model):
-    referer = models.ForeignKey('User')
-    referee = models.ForeignKey('User')
-
-    class Meta:
-        managed = False
-        db_table = 'Refers'
-        unique_together = (('referer_id', 'referee_id'),)
-
-
-class Response(models.Model):
-    id = models.IntegerField(primary_key=True)
-    choice = models.ForeignKey(Choice, blank=True, null=True)
-    question = models.ForeignKey(Question)
-    survey = models.ForeignKey('Survey')
-    text = models.CharField(max_length=200, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Response'
-
-
 class Restaurant(models.Model):
     id = models.CharField(primary_key=True, max_length=80)
     name = models.CharField(max_length=50, blank=True, null=True)
@@ -130,18 +24,135 @@ class Restaurant(models.Model):
     review_count = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'Restaurant'
 
 
 class Restaurantneighborhoods(models.Model):
-    neighborhood_name = models.CharField(max_length=80)
-    restaurant = models.ForeignKey(Restaurant)
+    neighborhood_name = models.CharField(max_length=80, primary_key=True)
+    restaurant_id = models.ForeignKey(Restaurant, primary_key=True)
 
     class Meta:
-        managed = False
+        # managed = False
         db_table = 'RestaurantNeighborhoods'
         unique_together = (('restaurant_id', 'neighborhood_name'),)
+
+class Bill(models.Model):
+    id = models.IntegerField(primary_key=True)
+    restaurant_id = models.ForeignKey('Restaurant', primary_key=True)
+    amount = models.IntegerField(blank=True, null=True)
+    image = models.TextField(blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Bill'
+        unique_together = (('id', 'restaurant_id'),)
+
+class Item(models.Model):
+    name = models.CharField(max_length=80,primary_key=True)
+    price = models.FloatField(blank=True, null=True)
+    restaurant_id = models.ForeignKey('Restaurant', primary_key=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Item'
+        unique_together = (('name', 'restaurant_id'),)
+
+class HasBill(models.Model):
+    item_name = models.ForeignKey('Item', related_name='HasBill_item_name', db_column='name', primary_key=True)
+    restaurant_id = models.ForeignKey('Item', related_name='HasBill_restaurant_id', db_column='restaurant_id', primary_key=True)
+    bill_id = models.ForeignKey(Bill, primary_key=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Has_Bill'
+        unique_together = (('item_name', 'bill_id', 'restaurant_id'),)
+
+class User(models.Model):
+    id = models.CharField(primary_key=True, max_length=50)
+    first_name = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(max_length=50, blank=True, null=True)
+    dob = models.DateField(blank=True, null=True)
+    email = models.CharField(max_length=20, blank=True, null=True)
+    credit = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'User'
+
+
+class Login(models.Model):
+    user = models.ForeignKey('User', primary_key=True)
+    facebook_id = models.CharField(max_length=20, blank=True, null=True)
+    password = models.CharField(max_length=20, blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Login'
+
+class Refers(models.Model):
+    referer_id = models.ForeignKey('User', related_name='Refers_referer_id', db_column='referer_id', primary_key=True)
+    referee_id = models.ForeignKey('User', related_name='Refers_referee_id', db_column='referee_id', primary_key=True)
+    restaurant_id = models.ForeignKey('Restaurant', db_column='id', primary_key=True)
+
+    class Meta:
+        db_table = 'Refers'
+        unique_together = (('referer_id', 'referee_id', 'restaurant_id'),)
+
+class Survey(models.Model):
+    id = models.IntegerField(primary_key=True)
+    user = models.ForeignKey('User', blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Survey'
+
+class Question(models.Model):
+    id = models.IntegerField(primary_key=True)
+    text = models.CharField(max_length=100, blank=True, null=True)
+    flag = models.IntegerField(blank=True, null=True)
+    category = models.CharField(max_length=20, blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Question'
+
+class Choice(models.Model):
+    id = models.IntegerField(primary_key=True)
+    text = models.CharField(max_length=20, blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Choice'
+
+class HasQuestion(models.Model):
+    survey_id = models.ForeignKey('Survey', related_name='HasQuestion_survey_id', primary_key=True)
+    question_id = models.ForeignKey('Question', related_name='HasQuestion_question_id', primary_key=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Has_Question'
+        unique_together = (('survey_id', 'question_id'),)
+
+class HasChoice(models.Model):
+    question_id = models.ForeignKey('Question', related_name='HasChoice_question_id', primary_key=True)
+    choice_id = models.ForeignKey(Choice, related_name='HasChoice_choice_id', primary_key=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Has_Choice'
+        unique_together = (('question_id', 'choice_id'),)
+
+
+class Response(models.Model):
+    id = models.IntegerField(primary_key=True)
+    choice = models.ForeignKey(Choice, blank=True, null=True)
+    question = models.ForeignKey(Question)
+    survey = models.ForeignKey('Survey')
+    text = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        # managed = False
+        db_table = 'Response'
 
 
 class Review(models.Model):
@@ -155,27 +166,13 @@ class Review(models.Model):
     votes_cool = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        # managed = False
         db_table = 'Review'
 
-
-class Survey(models.Model):
-    id = models.IntegerField(primary_key=True)
-    user = models.ForeignKey('User', blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Survey'
-
-
-class User(models.Model):
-    id = models.CharField(primary_key=True, max_length=50)
-    first_name = models.CharField(max_length=50, blank=True, null=True)
-    last_name = models.CharField(max_length=50, blank=True, null=True)
-    dob = models.DateField(blank=True, null=True)
-    email = models.CharField(max_length=20, blank=True, null=True)
-    credit = models.IntegerField(blank=True, null=True)
+class Checkin(models.Model):
+    survey_id = models.ForeignKey('Survey', db_column='id', primary_key=True)
+    bill_id = models.ForeignKey('Bill', related_name='Checkin_bill_id', primary_key=True)
+    restaurant_id = models.ForeignKey('Bill', related_name='Checkin_restaurant_id', primary_key=True)
 
     class Meta:
-        managed = False
-        db_table = 'User'
+        db_table = 'Checkin'
