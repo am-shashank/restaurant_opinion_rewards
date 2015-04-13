@@ -1,2 +1,1 @@
-add restaurant_id to Refers
-add Checkin table with survey_id, bill table's primary key
+send welcome email to student once he signs up
