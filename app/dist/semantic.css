@@ -12890,6 +12890,7 @@ ol.ui.horizontal.list li:before,
 .ui.inverted.segment,
 .ui.primary.inverted.segment {
   background-image: url(../html/images/display_image.jpg);
+  top: -2em;
   /*background-color: #1b1c1d;
   color: #ffffff;*/
 }
