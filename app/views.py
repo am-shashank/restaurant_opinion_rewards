@@ -18,6 +18,7 @@ def get_table_list(request):
     # html += "</body></html>"
     return HttpResponse(html)
 
+
 def signup(request):
     signup_data = request.POST
     id = signup_data.get('id')
@@ -38,6 +39,7 @@ def signup(request):
     new_user = User(
         id=id,
         first_name=first_name,
+        last_name=last_name,
         dob=dob,
         email=email,
         credit=0
@@ -53,15 +55,26 @@ def signup(request):
 
     # save friend list to database
 
-
-
     # TO DO: send welcome email
     request.session['userid'] = id
     message = "Successfully created account."
     return HttpResponse(message)
 
-
-
-
-    request.session['username'] = 
-    return HttpResponseRedirect('/home/')
+def login(request):
+    login_data = request.POST
+    username = login_data.get('username')
+    password = login_data.get('password')
+    try:
+        user = Login.objects.get(username=username)
+    except User.DoesNotExist:
+        message = "Account doesn't exist. Please create one here. <a href=\"/signup\">Login</a>"
+        # return HttpResponseRedirect('/signup')
+        return HttpResponse(message)
+    if user.password != password:
+        message = "Wrong password. Please try again. <a href=\"/\">Login</a>"
+        # return render_to_response("/signin", RequestContext(request, context))
+        return HttpResponse(message)
+    else:
+        request.session['username'] = username
+        message = "You have logged in Successfully"
+    return HttpResponse(message)

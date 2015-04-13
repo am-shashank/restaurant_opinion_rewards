@@ -23,13 +23,14 @@
    }(document, 'script', 'facebook-jssdk'));
 </script>
 	<!--<script src="../static/facebook.js"></script>-->
-	<form action="/signup" method="POST">
+	<form action="/signup_user" method="POST">
+        {% csrf_token %}
 		<div align="left">
-			UserId : <input type="userid" name="userId" /><br/>
+			UserId : <input type="userid" name="id" /><br/>
  
-			First Name : <input type="first name" name="firstName" /><br/>
+			First Name : <input type="first name" name="first_name" /><br/>
  
-			Last Name : <input type="last name" name="lastName" /><br/>
+			Last Name : <input type="last name" name="last_name" /><br/>
 
 			Password : <input type="password" name="password" /><br/>
 
@@ -38,10 +39,10 @@
 			Date of Birth : <input type="date of birth" name="dob" /><br/>
  
 			Email : <input type="email" name="email" /><br/>
- 
-			Mobile: <input type="number" name="mobile" /><br/>
 
-		<input type="button" value="Submit" /><br/>
+            Facebook ID : <input type="email" name="facebook_id" /><br/>
+
+		<input type="submit" value="Submit" /><br/>
 		</div>
 	</form>
 
