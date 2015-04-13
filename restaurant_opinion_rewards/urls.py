@@ -1,8 +1,7 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from app.views import (
-    current_datetime)
+from app.views import *
 
 urlpatterns = [
     # Examples:
@@ -10,5 +9,5 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^test/', current_datetime),
+    url(r'^test/', get_table_list),
 ]
