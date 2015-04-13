@@ -8,9 +8,14 @@ urlpatterns = [
     # Examples:
     # url(r'^$', 'restaurant_opinion_rewards.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
-
     url(r'^admin/$', include(admin.site.urls)),
-    url(r'^test/$', get_table_list),
     url(r'^signup/$', TemplateView.as_view(template_name="signup.html")),
-    url(r'^signup_user', signup)
+    url(r'^', TemplateView.as_view(template_name="Home Page.html")),
+
+
+    # methods
+    url(r'^signup_user', signup),
+    url(r'^login_user', login),
+    url(r'^test/$', get_table_list)
+
 ]
