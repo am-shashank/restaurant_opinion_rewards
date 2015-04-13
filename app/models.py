@@ -81,7 +81,7 @@ class User(models.Model):
 
 
 class Login(models.Model):
-    user = models.ForeignKey('User', primary_key=True)
+    user_id = models.ForeignKey('User', primary_key=True)
     facebook_id = models.CharField(max_length=20, blank=True, null=True)
     password = models.CharField(max_length=20, blank=True, null=True)
 
@@ -175,4 +175,13 @@ class Checkin(models.Model):
     restaurant_id = models.ForeignKey('Bill', related_name='Checkin_restaurant_id', primary_key=True)
 
     class Meta:
+        unique_together = (('survey_id', 'bill_id', 'restaurant_id'),)
         db_table = 'Checkin'
+
+class Friends(models.Model):
+    user_id = models.ForeignKey('User', db_column='user_id', related_name='Friends_user_id', primary_key=True)
+    friend_id = models.ForeignKey('User', db_column='friend_id', related_name='Friends_friend_id', primary_key=True)
+
+    class Meta:
+        unique_together = (('user_id', 'friend_id'),)
+        db_table = 'Friends'
