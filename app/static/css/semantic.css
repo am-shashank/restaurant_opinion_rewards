@@ -4913,6 +4913,8 @@ i.flag.zimbabwe:before {
 /* Standard */
 
 .ui.header {
+  position: relative;
+  top: +0.6em;
   border: none;
   margin: -webkit-calc(2rem -  0.165em ) 0em 1rem;
   margin: calc(2rem -  0.165em ) 0em 1rem;
@@ -9290,6 +9292,8 @@ img.ui.bordered.image {
 }
 
 .ui.icon.input input {
+  position: relative;
+  top: +1em;
   padding-right: 2.82142em !important;
 }
 
