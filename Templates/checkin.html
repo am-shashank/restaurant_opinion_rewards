@@ -18,14 +18,14 @@
   <!-- Site Properities -->
   <title>Kitchen Sink - Semantic</title>
 
-  <link rel="stylesheet" type="text/css" href="../dist/semantic.css">
-  <link rel="stylesheet" type="text/css" href="kitchensink.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/semantic.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/kitchensink.css">
 
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
 
   <!-- Used with Tab History !-->
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js"></script>
-  <script src="../dist/semantic.js"></script>
+  <script src="/static/js/semantic.js"></script>
 </head>
 
 <body id="sink">
@@ -43,11 +43,10 @@
           </div>
        </div>
     </div>
-     <img src="images/wireframe/image.png">
+     <img src="/static/images/wireframe/image.png">
   </div>
-
   <div class="content">
-    <div class="header">Title</div>
+    <div class="header">Dhondu Hotel</div>
   </div>
 
 </div>
@@ -57,6 +56,7 @@
 </div>
 
 <div class="ui grid">
+      
   <div class="row">
     <div class="two wide column">
     </div>
@@ -77,12 +77,27 @@
           </div>
         </div>
       </div>
-    </div>
+      <div class="ui grid">
+          <div class="row">
+            <div class="fourteen wide column">            
+              <div class="field">
+              <label>Upload QR code image here</label> 
+                  <input type="file">
+              </div>
+            </div>
+            <div class="two column wide">
+          </div>
+        </div>
+      </div>
+       </div>   
+    
     </div>
     <div class="two wide column">
     </div>
   </div>
-</div>
+
+  </div>
+
 <!--form enctype="multipart/form-data" method="post" action="http://zxing.org/w/decode">
 <input name="f" type="file"/>
 <input type="submit"/>
