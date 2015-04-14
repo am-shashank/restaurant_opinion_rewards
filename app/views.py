@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.http import HttpResponse
+from django.views.generic import TemplateView
 import datetime
 from app.models import *
 
@@ -61,6 +62,15 @@ def signup(request):
     return HttpResponse(message)
 
 def login(request):
+    # get request 
+    if request.method == 'GET':
+        # Redirect to home page if the session is set
+        if 'username' in request.session:
+            return HttpResponseRedirect('/home/')
+        else:
+            return render_to_response("login.html")
+
+    # verify login credentials
     login_data = request.POST
     username = login_data.get('username')
     password = login_data.get('password')
@@ -77,4 +87,8 @@ def login(request):
     else:
         request.session['username'] = username
         message = "You have logged in Successfully"
-    return HttpResponse(message)
+    context = {
+        "first_name": username,
+        "password": password
+    }
+    return render_to_response("home.html", RequestContext(request, context))
