@@ -5,6 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 import datetime
 from app.models import *
+import collections
+import json
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -30,7 +32,8 @@ def signup(request):
     dob = signup_data.get('dob')
     email = signup_data.get('email')
     password = signup_data.get('password')
-    facebook_id = signup_data.get('facebook_id')
+    # facebook_id = signup_data.get('facebook_id')
+    phone = signup_data.get('phone')
     users = User.objects.all()
     message = ""
     for user in users:
@@ -63,6 +66,27 @@ def signup(request):
     message = "Successfully created account."
     return HttpResponse(message)
 
+
+def get_nearby_restaurants(latitude, longitude):
+    startlat = float('latitude')
+    startlng = float('longitude')
+    cursor = connection.cursor()
+    cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 50',(startlat,startlng))
+    results = cursor.fetchall()
+    print results
+    objects_list = []
+    for row in results:
+        d = collections.OrderedDict()
+        d['id'] = row[0]
+        d['name'] = row[1]
+        d['full_address'] = row[2]
+        d['stars'] = row[3]
+        d['latitude'] = row[4]
+        d['longitude'] = row[5]
+        objects_list.append(d)
+    j = json.dumps(objects_list)
+    return j
+
 @csrf_exempt
 def login(request):
     # get request
@@ -91,9 +115,13 @@ def login(request):
         request.session['username'] = username
         message = "You have logged in Successfully"
     user = User.objects.get(id=username)
+
     context = {
         "first_name": user.first_name,
         "credit": user.credit
     }
-
+    # get nearby restaurants if latitude and longitude are not null
+    if 'latitude' in login_data and 'longitude' in login_data:
+        context["nearby_restaurants"] = get_nearby_restaurants()
+    print context
     return render_to_response("home.html", RequestContext(request, context))
