@@ -13,7 +13,7 @@
   <link rel="stylesheet" type="text/css" href="/static/css/semantic.css">
   <link rel="stylesheet" type="text/css" href="/static/css/kitchensink.css">
   <link rel="stylesheet" type="text/css" href="/static/css/homepage.css">
-
+  <link rel="stylesheet" type="text/css" href="/static/css/modal-window.css"/>
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
 
   <!-- Used with Tab History !-->
@@ -21,6 +21,10 @@
   <script src="/static/js/semantic.js"></script>
   <script src="/static/js/homepage.js"></script>
   <script src="/static/js/post.js"></script>
+  
+
+<script src="/static/js/modal-window.js" type="text/javascript"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 
 </style>
 </head>
@@ -56,7 +60,7 @@
               <div class="ui red button" id="login_button">Login</div>
             </div>
             <div class="column" align="right">
-              <div class="ui red button">Sign up</div>
+              <button class="ui red button" onclick="signup()">Sign up</button>
             </div>
           </div>
       </div>
@@ -64,6 +68,18 @@
   </div>
 </div>
 </div>
+<!-- Signup Popup using Modal Window-->
+<script type="text/javascript">
+
+ function signup() {
+        
+        var $ht = 0.75*$(window).height();
+        var $wt = 0.50*$(window).width();
+        var $text = $("<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/semantic.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/kitchensink.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/homepage.css\"></head><body><h3 class=\"ui header\" align=\"center\">Signup</h3><br><form>First Name<br> <div class=\"ui icon input\"><input type=\"text\" name=\"first name\"></div><br><br><br>Last Name<br> <div class=\"ui icon input\"><input type=\"text\" name=\"last name\"></div><br><br><br>Email Id<br> <div class=\"ui icon input\"><input type=\"email\" name=\"email\"></div><br><br><br>Telephone Number<br> <div class=\"ui icon input\"><input type=\"tel\" name=\"telephone\"></div><br><br><br>Date of Birth<br> <div class=\"ui icon input\"><input type=\"date\" step=\"10\"name=\"dob\"></div><br><br><br>Password<br><div class=\"ui icon input\"><input type=\"password\" name=\"password\"></div><br><br><br>Confrim Password<br><div class=\"ui icon input\"><input type=\"password\" name=\"confirm password\"></div><br><br><br><button class=\"ui blue button\">Sign up</button></form></body></html>");
+       //alert("hide");
+       $modal.open({content: $text, height: $ht, width: $wt});
+     };
+</script>
 
 <script type="text/javascript">
   $('#login_button').click(function() {
@@ -74,20 +90,6 @@
       'password': $password
     };
     post('/login',data, 'POST');
-
-    /*$.ajax({
-            type: "POST",
-            url: "/login/",
-            data: data,
-            success: function(){
-                alert('Successfully logged in');
-                // $modal.open({content: $text, height: $ht, width: $wt});
-                // $('#result-message').html("Successfully requested your group ride. PennCycle will get in touch with you soon.");
-            },
-            error: function(error) {
-                alert(error); 
-            } 
-        }); */
   });
 </script>
 

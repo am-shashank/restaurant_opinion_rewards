@@ -90,8 +90,10 @@ def login(request):
     else:
         request.session['username'] = username
         message = "You have logged in Successfully"
+    user = User.objects.get(id=username)
     context = {
-        "first_name": username,
-        "password": password
+        "first_name": user.first_name,
+        "credit": user.credit
     }
+
     return render_to_response("home.html", RequestContext(request, context))
