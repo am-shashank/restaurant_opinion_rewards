@@ -9,6 +9,16 @@
   }
 </style>
 
+<script src="/static/js/post.js"></script>
+<script>
+function submit_form()
+{
+  var params = {}
+  params["phone"] = document.getElementById("phone").value;
+  post("/refer", params, "POST");
+}
+
+</script>
 
   <!-- Standard Meta -->
   <meta charset="utf-8" />
@@ -67,12 +77,12 @@
             <div class="fourteen wide column">            
               <div class="field">
                 <label>To refer a friend, enter their phone number</label> 
-                  <input type="text">
+                  <input type="text" id="phone">
               </div>
             </div>
           <div class="two wide column">
             <div class="submit_align">
-            <div class="ui button">Submit</div>
+            <div class="ui button" onclick="submit_form()">Submit</div>
             </div>
           </div>
         </div>
