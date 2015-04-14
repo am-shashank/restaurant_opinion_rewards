@@ -20,6 +20,7 @@
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js"></script>
   <script src="/static/js/semantic.js"></script>
   <script src="/static/js/homepage.js"></script>
+  <script src="/static/js/post.js"></script>
 
 </style>
 </head>
@@ -36,7 +37,7 @@
       <div class="column">
         <div align="center">
           <div class="ui icon input">
-              <input type="text" placeholder="Username" name="username">
+              <input type="text" placeholder="Username" name="username" id="id_username">
           </div>
       </div>
      </div>
@@ -44,7 +45,7 @@
      <div class="column">
         <div align="center">
           <div class="ui icon input">
-               <input type="password" placeholder="Password" name="password">
+               <input type="password" placeholder="Password" name="password" id="id_password">
           </div>
         </div>
      </div>
@@ -52,7 +53,7 @@
       <div class="ui grid">       
           <div class="two column row">
               <div class="column" align="left">
-              <div class="ui red button">Login</div>
+              <div class="ui red button" id="login_button">Login</div>
             </div>
             <div class="column" align="right">
               <div class="ui red button">Sign up</div>
@@ -63,6 +64,32 @@
   </div>
 </div>
 </div>
+
+<script type="text/javascript">
+  $('#login_button').click(function() {
+    var $username = $('#id_username').val();
+    var $password = $('#id_password').val();
+    var data = {
+      'username': $username,
+      'password': $password
+    };
+    post('/login',data, 'POST');
+
+    /*$.ajax({
+            type: "POST",
+            url: "/login/",
+            data: data,
+            success: function(){
+                alert('Successfully logged in');
+                // $modal.open({content: $text, height: $ht, width: $wt});
+                // $('#result-message').html("Successfully requested your group ride. PennCycle will get in touch with you soon.");
+            },
+            error: function(error) {
+                alert(error); 
+            } 
+        }); */
+  });
+</script>
 
 <div class="ui inverted masthead segment">
     <div class="ui page grid">
