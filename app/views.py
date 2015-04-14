@@ -1,6 +1,8 @@
 from django.shortcuts import render, render_to_response
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.generic import TemplateView
+from django.views.decorators.csrf import csrf_exempt
+from django.template import RequestContext
 import datetime
 from app.models import *
 
@@ -61,8 +63,9 @@ def signup(request):
     message = "Successfully created account."
     return HttpResponse(message)
 
+@csrf_exempt
 def login(request):
-    # get request 
+    # get request
     if request.method == 'GET':
         # Redirect to home page if the session is set
         if 'username' in request.session:
@@ -75,7 +78,7 @@ def login(request):
     username = login_data.get('username')
     password = login_data.get('password')
     try:
-        user = Login.objects.get(username=username)
+        user = Login.objects.get(user_id=username)
     except User.DoesNotExist:
         message = "Account doesn't exist. Please create one here. <a href=\"/signup\">Login</a>"
         # return HttpResponseRedirect('/signup')

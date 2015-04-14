@@ -81,7 +81,7 @@ class User(models.Model):
 
 
 class Login(models.Model):
-    user_id = models.ForeignKey('User', primary_key=True)
+    user_id = models.ForeignKey('User', db_column='user_id', primary_key=True)
     facebook_id = models.CharField(max_length=20, blank=True, null=True)
     password = models.CharField(max_length=20, blank=True, null=True)
 
