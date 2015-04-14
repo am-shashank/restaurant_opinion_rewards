@@ -18,6 +18,38 @@ function submit_form()
   post("/refer", params, "POST");
 }
 
+function submit_qrcode()
+{
+  var params = {}
+  params["qrcode"] = document.getElementById("qrcode").value;
+  post_internal("/qrcode", params, "POST");
+}
+
+function post_internal(path, params, method) {
+    method = method || "post"; // Set method to post by default if not specified.
+
+    // The rest of this code assumes you are not using a library.
+    // It can be made less wordy if you use one.
+    var form = document.createElement("form");
+    form.setAttribute("method", method);
+    form.setAttribute("action", path);
+    form.setAttribute("enctype", "multipart/form-data")
+
+    for(var key in params) {
+        if(params.hasOwnProperty(key)) {
+            var hiddenField = document.createElement("input");
+            hiddenField.setAttribute("type", "hidden");
+            hiddenField.setAttribute("name", key);
+            hiddenField.setAttribute("value", params[key]);
+
+            form.appendChild(hiddenField);
+         }
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
 </script>
 
   <!-- Standard Meta -->
@@ -87,18 +119,22 @@ function submit_form()
           </div>
         </div>
       </div>
+      <form action="http://www.cs.tut.fi/cgi-bin/run/~jkorpela/echo.cgi" enctype="multipart/form-data" method="post" > 
       <div class="ui grid">
           <div class="row">
-            <div class="fourteen wide column">            
+            <div class="fourteen wide column">
+
               <div class="field">
               <label>Upload QR code image here</label> 
-                  <input type="file">
+                  <input type="file" name="datafile" size="40">
               </div>
             </div>
             <div class="two column wide">
+            <input class="ui button"  type="submit" value="Submit">
           </div>
         </div>
       </div>
+      </form>
        </div>   
     
     </div>
