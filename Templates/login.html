@@ -23,6 +23,12 @@
   <script src="/static/js/post.js"></script>
   <script src="/static/js/modal-window.js" type="text/javascript"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+  <script src="/static/js/autocomplete.js"></script>
+  <script type="text/javascript">google.maps.event.addDomListener(window, 'load', initialize);</script>
+  <script src="/static/js/current-location.js" type="text/javascript"></script>
+
+
 
 </style>
 </head>
@@ -73,7 +79,52 @@
         
         var $ht = 0.75*$(window).height();
         var $wt = 0.50*$(window).width();
-        var $text = $("<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/semantic.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/kitchensink.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/homepage.css\"></head><body><h3 class=\"ui header\" align=\"center\">Signup</h3><br><form>First Name<br> <div class=\"ui icon input\"><input type=\"text\" name=\"first name\"></div><br><br><br>Last Name<br> <div class=\"ui icon input\"><input type=\"text\" name=\"last name\"></div><br><br><br>Email Id<br> <div class=\"ui icon input\"><input type=\"email\" name=\"email\"></div><br><br><br>Telephone Number<br> <div class=\"ui icon input\"><input type=\"tel\" name=\"telephone\"></div><br><br><br>Date of Birth<br> <div class=\"ui icon input\"><input type=\"date\" step=\"10\"name=\"dob\"></div><br><br><br>Password<br><div class=\"ui icon input\"><input type=\"password\" name=\"password\"></div><br><br><br>Confrim Password<br><div class=\"ui icon input\"><input type=\"password\" name=\"confirm password\"></div><br><br><br><button class=\"ui blue button\">Sign up</button></form></body></html>");
+        var $text = $("<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/semantic.css\"> <link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/kitchensink.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/homepage.css\"></head>"
+          +"<body>"
+            +"<h3 class=\"ui header\" align=\"center\">Signup</h3><br>"
+
+            + "<form> User ID: "
+              +"<div class=\"ui icon input\">"
+                  +"<input type=\"text\" name=\"username\">"
+              +"</div><br><br><br>"
+
+              + "First Name<br>"
+              + "<div class=\"ui icon input\">"
+                  +"<input type=\"text\" name=\"first_name\">"
+              +"</div><br><br><br>"
+
+              + "Last Name<br>" 
+                +"<div class=\"ui icon input\">"
+                  +"<input type=\"text\" name=\"last_name\">"
+              +"</div><br><br><br>"
+
+              +"Email ID<br> "
+                +"<div class=\"ui icon input\">"
+                  +"<input type=\"email\" name=\"email\">"
+              +"</div><br><br><br>"
+
+              +"Telephone Number<br>" 
+                +"<div class=\"ui icon input\">"
+                  +"<input type=\"tel\" name=\"telephone\">"
+              +"</div><br><br><br>"
+
+              +"Date of Birth<br>"
+                +"<div class=\"ui icon input\">"
+                  +"<input type=\"date\" step=\"10\"name=\"dob\">"
+                +"</div><br><br><br>"
+
+              +"Password<br>"
+                +"<div class=\"ui icon input\">"
+                  +"<input type=\"password\" name=\"password\">"
+                +"</div><br><br><br>"
+
+              +"Confrim Password<br>"
+                +"<div class=\"ui icon input\">"
+                  +"<input type=\"password\" name=\"confirm_password\">"
+                +"</div><br><br><br>"
+
+              +"<button class=\"ui blue button\" id=\"\">Sign up</button></form>"
+          +"</body></html>");
        //alert("hide");
        $modal.open({content: $text, height: $ht, width: $wt});
      };
@@ -83,10 +134,18 @@
   $('#login_button').click(function() {
     var $username = $('#id_username').val();
     var $password = $('#id_password').val();
+    geocoder = new google.maps.Geocoder();
+    var address = document.getElementById("my-address").value;
     var data = {
       'username': $username,
       'password': $password
     };
+    geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        data['latitude'] = results[0].geometry.location.lat();
+        data['longitude'] = results[0].geometry.location.lng();
+      }
+    });
     post('/login',data, 'POST');
   });
 </script>
@@ -105,7 +164,7 @@
           <div class="column"></div>
           <div class="column">
        <div class="ui remote search">
-              <input type="text" placeholder="Search for Restaurants" class="prompt">
+              <input type="text" placeholder="Search for Restaurants" id="my-address" class="prompt">
           <div class="results"></div>
         </div>
       </div>
