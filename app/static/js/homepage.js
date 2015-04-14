@@ -1,3 +1,4 @@
+
 $(document)
   .ready(function() {
 
@@ -36,13 +37,13 @@ $(document)
     ;
 
     $('.ui.dropdown')
-      .dropdown({
+      .dropdown( function({
         on: 'hover'
       })
     ;
 
     $('.ui.form')
-      .form(validationRules, {
+      .form(validationRules, function({
         on: 'blur'
       })
     ;
