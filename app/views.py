@@ -114,6 +114,7 @@ def login(request):
     else:
         request.session['username'] = username
         message = "You have logged in Successfully"
+
     user = User.objects.get(id=username)
 
     context = {
@@ -122,6 +123,15 @@ def login(request):
     }
     # get nearby restaurants if latitude and longitude are not null
     if 'latitude' in login_data and 'longitude' in login_data:
-        context["nearby_restaurants"] = get_nearby_restaurants()
+        context["nearby_restaurants"] = get_nearby_restaurants(latitude, longitude)
     print context
+    # set the entire session object
+    request.session['context'] = context
     return render_to_response("home.html", RequestContext(request, context))
+
+def home(request):
+    # check if user is logged in
+    if 'username' not in request.session:
+        return HttpResponseRedirect('/')
+    else:
+        return render_to_response("home.html", RequestContext(request, request.session['context']))
