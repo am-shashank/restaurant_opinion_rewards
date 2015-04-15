@@ -8,6 +8,7 @@ from twilio.rest import TwilioRestClient
 from app.models import *
 import collections
 import json
+from django.db import connection
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -69,8 +70,9 @@ def signup(request):
 
 
 def get_nearby_restaurants(latitude, longitude):
-    startlat = float('latitude')
-    startlng = float('longitude')
+    #print "from get_nearby_restaurants: " + latitude
+    startlat = float(latitude)
+    startlng = float(longitude)
     cursor = connection.cursor()
     cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 50',(startlat,startlng))
     results = cursor.fetchall()
@@ -91,15 +93,19 @@ def get_nearby_restaurants(latitude, longitude):
 @csrf_exempt
 def login(request):
     # get request
+    login_data = request.POST
+    print "latitude: " + str(login_data.get('latitude'))
+    print "longitue: " + str(login_data.get('longitude'))
     if request.method == 'GET':
         # Redirect to home page if the session is set
         if 'username' in request.session:
+            print request.session
             return HttpResponseRedirect('/home/')
         else:
             return render_to_response("login.html")
 
     # verify login credentials
-    login_data = request.POST
+    
     username = login_data.get('username')
     password = login_data.get('password')
     try:
@@ -123,7 +129,7 @@ def login(request):
     }
     # get nearby restaurants if latitude and longitude are not null
     if 'latitude' in login_data and 'longitude' in login_data:
-        context["nearby_restaurants"] = get_nearby_restaurants()
+        context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
     print context
     return render_to_response("home.html", RequestContext(request, context))
 
