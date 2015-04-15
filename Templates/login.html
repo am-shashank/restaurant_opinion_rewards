@@ -26,13 +26,12 @@
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
   <script src="/static/js/autocomplete.js"></script>
   <script type="text/javascript">google.maps.event.addDomListener(window, 'load', initialize);</script>
-  <script src="/static/js/current-location.js" type="text/javascript"></script>
 
 
 
 </style>
 </head>
-<body id ="sink">
+<body id ="sink" onload="getLocation()">
 <div class="ui secondary segment">
  <div class="ui grid">
   <div class="four column row">
@@ -137,21 +136,42 @@
 </script>
 
 <script type="text/javascript">
+  var data = new Object();
+  function getLocation(){
+    if (navigator.geolocation)
+    {
+        navigator.geolocation.getCurrentPosition(showPosition);
+    } else 
+    {
+        //x.innerHTML = "Geolocation is not supported by this browser.";
+    }
+      
+    function showPosition(position) {
+      data['latitude'] = position.coords.latitude ;
+      data['longitude'] = position.coords.longitude; 
+    }
+  }
   $('#login_button').click(function() {
     var $username = $('#id_username').val();
     var $password = $('#id_password').val();
+
     geocoder = new google.maps.Geocoder();
     var address = document.getElementById("my-address").value;
-    var data = {
+    /*var data = {
       'username': $username,
       'password': $password
-    };
-    geocoder.geocode( { 'address': address}, function(results, status) {
+    };*/
+    
+    data['username'] = $username;
+    data['password'] = $password;
+
+    /*geocoder.geocode( { 'address': address}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
         data['latitude'] = results[0].geometry.location.lat();
         data['longitude'] = results[0].geometry.location.lng();
       }
-    });
+    });*/
+
     post('/login',data, 'POST');
   });
 </script>
@@ -159,7 +179,7 @@
 <div class="ui inverted masthead segment">
     <div class="ui page grid">
       
-        <div class="ui hidden transition information">
+       <div class="ui transition information visible">
           <h1 class="ui inverted header">
            <font color="black"> Dhondu Betaaa Just Chill !!!!!</font>
 
@@ -187,7 +207,6 @@
       </div>
       </div>
     </div>
-  </div>
 
 
 
