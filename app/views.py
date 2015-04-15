@@ -92,6 +92,7 @@ def get_nearby_restaurants(latitude, longitude):
 
 @csrf_exempt
 def login(request):
+    print "this is login"
     # get request
     login_data = request.POST
     print "latitude: " + str(login_data.get('latitude'))
@@ -131,7 +132,6 @@ def login(request):
     # get nearby restaurants if latitude and longitude are not null
     if 'latitude' in login_data and 'longitude' in login_data:
         context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
-
     print context
     # set the entire session object
     request.session['context'] = context
@@ -168,7 +168,7 @@ def send_referral(request):
     }
 
     try:
-        send_msg( message, phone_number)
+        send_msg(message, phone_number)
     except:
         message = "Message Deliver Failed!"
         # return HttpResponseRedirect('/signup')
@@ -181,25 +181,41 @@ def send_referral(request):
 def send_msg(intro_msg, client_number):
         # The registered twilio account is then verified, based on the given parameters and the information necessary to send the sms with the given account is obtained.
     # Twilio Integration
-    # put your own credentials here 
-    ACCOUNT_SID = "ACe142168c1b1c86c9933529838dadd1ec" 
-    AUTH_TOKEN = "7c14a72a5766def39513501be12abd92" 
+    # put your own credentials here
+    ACCOUNT_SID = "ACe142168c1b1c86c9933529838dadd1ec"
+    AUTH_TOKEN = "7c14a72a5766def39513501be12abd92"
 
-    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN) 
+    client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
-        # Information corresponds to the phone number associated with the account that is used to send sms etc.
-        # Then a message is created which is routed to the client_number through twilio number of the account.
+    # Information corresponds to the phone number associated with the account that is used to send sms etc.
+    # Then a message is created which is routed to the client_number through twilio number of the account.
         
-    message=client.messages.create(
-            body=intro_msg,
-            to=client_number,
+    message = client.messages.create(
+        body=intro_msg,
+        to=client_number,
         from_="+17707286369",
     )
 
 def home(request):
+    print "this is home"
     # check if user is logged in
     if 'username' not in request.session:
+        print "session not set"
         return HttpResponseRedirect('/')
     else:
+        print "session already set"
         return render_to_response("home.html", RequestContext(request, request.session['context']))
 
+@csrf_exempt
+def logout(request):
+    print "Logging out ...."+ request.session['username']
+    try:
+        del request.session['username']
+        del request.session['context']
+    except KeyError:
+        pass
+
+    request.session.flush()
+    print request.session
+    
+    return HttpResponse('Success')
