@@ -92,7 +92,6 @@ def get_nearby_restaurants(latitude, longitude):
 
 @csrf_exempt
 def login(request):
-    print "this is login"
     # get request
     login_data = request.POST
     print "latitude: " + str(login_data.get('latitude'))
@@ -132,8 +131,9 @@ def login(request):
     # get nearby restaurants if latitude and longitude are not null
     if 'latitude' in login_data and 'longitude' in login_data:
         context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
-    print context
     # set the entire session object
+    print "Context"
+    print context
     request.session['context'] = context
     return render_to_response("home.html", RequestContext(request, context))
 
@@ -197,7 +197,6 @@ def send_msg(intro_msg, client_number):
     )
 
 def home(request):
-    print "this is home"
     # check if user is logged in
     if 'username' not in request.session:
         print "session not set"
@@ -219,3 +218,14 @@ def logout(request):
     print request.session
     
     return HttpResponse('Success')
+
+
+def test_coupon_query(request):
+    context = request.session['context']
+    coupons_list = []
+    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+        d = collections.OrderedDict()
+        d['id'] = coupon.id
+        d['restaurant_id'] = coupon.restaurant_id
+    j = json.dumps(coupons_list)
+
