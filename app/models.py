@@ -22,7 +22,7 @@ class Restaurant(models.Model):
     longitude = models.FloatField(blank=True, null=True)
     stars = models.FloatField(blank=True, null=True)
     review_count = models.IntegerField(blank=True, null=True)
-
+    image_path = models.CharField(max_length=100)
     class Meta:
         db_table = 'Restaurant'
 
