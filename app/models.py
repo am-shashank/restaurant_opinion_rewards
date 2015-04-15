@@ -74,7 +74,7 @@ class User(models.Model):
     dob = models.DateField(blank=True, null=True)
     email = models.CharField(max_length=20, blank=True, null=True)
     credit = models.IntegerField(blank=True, null=True)
-
+    telephone = models.IntegerField(blank=True, null=True)
     class Meta:
         # managed = False
         db_table = 'User'
@@ -185,3 +185,14 @@ class Friends(models.Model):
     class Meta:
         unique_together = (('user_id', 'friend_id'),)
         db_table = 'Friends'
+
+class Coupons(models.Model):
+    id = models.IntegerField(primary_key=True)
+    user_id = models.ForeignKey('User')
+    restaurant_id = models.ForeignKey('Restaurant')
+    deal = models.CharField(max_length=100)
+    expires = models.DateTimeField()
+    image_path = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'Coupons'
