@@ -130,17 +130,14 @@ def login(request):
     }
     # get nearby restaurants if latitude and longitude are not null
     if 'latitude' in login_data and 'longitude' in login_data:
-<<<<<<< HEAD
         context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
-=======
-        context["nearby_restaurants"] = get_nearby_restaurants(latitude, longitude)
->>>>>>> 8f18f0d1d88dd194e7a523f4d27cf8c964466c67
+
     print context
     # set the entire session object
     request.session['context'] = context
     return render_to_response("home.html", RequestContext(request, context))
 
-<<<<<<< HEAD
+
 @csrf_exempt
 def send_referral(request):
     # get request
@@ -199,11 +196,10 @@ def send_msg(intro_msg, client_number):
         from_="+17707286369",
     )
 
-=======
 def home(request):
     # check if user is logged in
     if 'username' not in request.session:
         return HttpResponseRedirect('/')
     else:
         return render_to_response("home.html", RequestContext(request, request.session['context']))
->>>>>>> 8f18f0d1d88dd194e7a523f4d27cf8c964466c67
+
