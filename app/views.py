@@ -70,25 +70,35 @@ def signup(request):
 
 
 def get_nearby_restaurants(latitude, longitude):
-    #print "from get_nearby_restaurants: " + latitude
+    # print "from get_nearby_restaurants: " + latitude
     startlat = float(latitude)
     startlng = float(longitude)
     cursor = connection.cursor()
-    cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 50',(startlat,startlng))
+    cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
     results = cursor.fetchall()
-    print results
-    objects_list = []
+
+    # 4 indicates number of columns in the grid on home.html
+    total_required_results = len(results) / 4
+    # 2 level dictionary indices
+    i = 0
+    j = 0
+    objects = {}
     for row in results:
-        d = collections.OrderedDict()
+        d = {}
         d['id'] = row[0]
         d['name'] = row[1]
         d['full_address'] = row[2]
         d['stars'] = row[3]
         d['latitude'] = row[4]
         d['longitude'] = row[5]
-        objects_list.append(d)
-    j = json.dumps(objects_list)
-    return j
+        if i % 4 == 0:
+            j += 1
+            objects[str(j)] = {}
+        objects[str(j)][str(i % 4)] = d
+        i += 1
+        if i == total_required_results:
+            break
+    return objects
 
 @csrf_exempt
 def login(request):
@@ -110,7 +120,7 @@ def login(request):
     password = login_data.get('password')
     try:
         user = Login.objects.get(user_id=username)
-    except User.DoesNotExist:
+    except Login.DoesNotExist:
         message = "Account doesn't exist. Please create one here. <a href=\"/signup\">Login</a>"
         # return HttpResponseRedirect('/signup')
         return HttpResponse(message)
@@ -132,9 +142,35 @@ def login(request):
     if 'latitude' in login_data and 'longitude' in login_data:
         context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
     # set the entire session object
-    print "Context"
-    print context
     request.session['context'] = context
+    print "Before getting coupons"
+    # test_query(request)
+
+    # fetch all the coupons associated with the current user
+    coupons = {}
+    i = 1
+    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+        coupons[str(i)] = {}
+        # check for expires or filter them using query
+        d = {}
+        d['id'] = coupon.id
+        # coupon.restaurant_id is actually restuarant object
+        d['restaurant_id'] = coupon.restaurant_id.id
+        try:
+            d['restaurant_name'] = coupon.restaurant_id.name
+        except Restaurant.DoesNotExist:
+            message = "restaurant does not exist"
+            return HttpResponse(message)
+        d['deal'] = coupon.deal
+        d['image_path'] = coupon.image_path
+        coupons[str(i)] = d
+        i += 1
+
+    context['coupons'] = coupons
+    request.session['context'] = context
+    print "Context object after setting coupons"
+    print context
+
     return render_to_response("home.html", RequestContext(request, context))
 
 
@@ -220,12 +256,27 @@ def logout(request):
     return HttpResponse('Success')
 
 
-def test_coupon_query(request):
+def test_query(request):
+    if 'username' not in request.session:
+        return HttpResponseRedirect('/')
     context = request.session['context']
     coupons_list = []
     for coupon in Coupons.objects.filter(user_id=request.session['username']):
+        # check for expires or filter them using query
         d = collections.OrderedDict()
         d['id'] = coupon.id
         d['restaurant_id'] = coupon.restaurant_id
+        try:
+            d['restaurant_name'] = Restaurant.objects.get(id=coupon.restaurant_id)
+        except Restaurant.DoesNotExist:
+            message = "restaurant does not exist"
+            return HttpResponse(message)
+        d['deal'] = coupon.deal
+        d['image_path'] = coupon.image_path
+        coupons_list.append(coupon)
     j = json.dumps(coupons_list)
-
+    context['coupons'] = j
+    request.session['context'] = context
+    print "Context obejct after setting coupons"
+    print context
+    # return render_to_response("home.html", RequestContext(request, request.session['context']))
