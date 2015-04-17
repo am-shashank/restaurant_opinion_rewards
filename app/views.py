@@ -76,9 +76,9 @@ def get_nearby_restaurants(latitude, longitude):
     cursor = connection.cursor()
     cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
     results = cursor.fetchall()
-
+    print results
     # 4 indicates number of columns in the grid on home.html
-    total_required_results = len(results) / 4
+    total_required_results = len(results) - len(results) % 4
     # 2 level dictionary indices
     i = 0
     j = 0
@@ -111,9 +111,11 @@ def login(request):
         if 'username' in request.session:
             print request.session
             return HttpResponseRedirect('/home/')
+        elif 'context' in request.session:
+            print request.session['context']
+            return render_to_response("login.html",RequestContext(request, request.session['context']))
         else:
             return render_to_response("login.html")
-
     # verify login credentials
     
     username = login_data.get('username')
@@ -256,5 +258,46 @@ def logout(request):
 
     request.session.flush()
     print request.session
-    
+
     return HttpResponse('Success')
+
+
+def test_query(request):
+    if 'username' not in request.session:
+        return HttpResponseRedirect('/')
+    context = request.session['context']
+    coupons_list = []
+    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+        # check for expires or filter them using query
+        d = collections.OrderedDict()
+        d['id'] = coupon.id
+        d['restaurant_id'] = coupon.restaurant_id
+        try:
+            d['restaurant_name'] = Restaurant.objects.get(id=coupon.restaurant_id)
+        except Restaurant.DoesNotExist:
+            message = "restaurant does not exist"
+            return HttpResponse(message)
+        d['deal'] = coupon.deal
+        d['image_path'] = coupon.image_path
+        coupons_list.append(coupon)
+    j = json.dumps(coupons_list)
+    context['coupons'] = j
+    request.session['context'] = context
+    print "Context obejct after setting coupons"
+    print context
+    # return render_to_response("home.html", RequestContext(request, request.session['context']))
+
+@csrf_exempt
+def search_clicked(request):
+    search_data = request.POST
+    print "latitude: " + str(search_data.get('latitude'))
+    print "longitue: " + str(search_data.get('longitude'))
+    context = {}
+    if 'latitude' in search_data and 'longitude' in search_data:
+        context["nearby_restaurants"] = get_nearby_restaurants(search_data.get('latitude'), search_data.get('longitude'))
+    # set the session object
+    request.session['context'] = context
+    #print context
+    #print "Search clicked function ends"
+    return HttpResponseRedirect('/login')
+

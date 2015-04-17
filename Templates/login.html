@@ -174,6 +174,22 @@
 
     post('/login',data, 'POST');
   });
+
+  function search_button_clicked() {
+  alert("Search button clicked");
+  var search_data = {}
+    geocoder = new google.maps.Geocoder();
+    var address = document.getElementById("my-address").value;
+    geocoder.geocode( { 'address': address}, function(results, status) {
+        search_data['latitude'] = results[0].geometry.location.lat();
+        search_data['longitude'] = results[0].geometry.location.lng();      
+        post('/search',search_data, 'POST');
+    });
+
+   
+}
+</script>
+<script type="text/javascript">
 </script>
 
 <div class="ui inverted masthead segment">
@@ -195,7 +211,7 @@
         </div>
       </div>
       <div class="column">
-          <div class="large basic inverted animated fade ui button">
+          <div class="large basic inverted animated fade ui button" id = "search_button" onclick="search_button_clicked();">
             <div class="visible content"> <font color = "black">Hungry ?</font></div>
             <div class="hidden content"> <font color="black">Run Search </font></div>
           </div>
@@ -239,162 +255,45 @@
     </div>
 -->
 
-
-
-<div class="ui grid">
-<div class="five column row">
-  <div class="column">
-    
-    <!-- Restaurant Card -->
-    <div class="ui card">
-      <div class="image">
-        <div class="ui dimmer">
-          <div class="content">
-            <div class="center">
-              <div class="ui inverted button">Add Friend
+{% for key, value in nearby_restaurants.items %}
+      <div class="ui grid">
+        <div class="four column row">
+        {% for key1, value1 in value.items %}
+          <div class="column">
+            <div class="ui card">
+                <div class="image">
+                  <div class="ui dimmer">
+                    <div class="content">
+                        <div class="center">
+                            <div class="ui inverted button">Restaurant</div>
+                        </div>
+                     </div>
+                  </div>
+                   <img src="/static/images/wireframe/image.png">
               </div>
+
+              <div class="content">
+                  <div class="header">
+                    {% with "/checkin?id="|add:value1.id as checkin_url %}
+                      <a href={{ checkin_url }}>{{ value1.name }}</a>
+                    {% endwith %}
+                  </div>
+                  <div class="meta">
+                    <a class="group">{{ value1.stars }}</a>
+                  </div>
+                  <div class="description">{{ value1.full_address }}</div>
+              </div>
+
+              <div class="extra content">
+                  <a class="center floated created">My Review</a>
+              </div>
+
             </div>
           </div>
+          {% endfor %}
         </div>
-        <img src="/static/images/wireframe/image.png">
       </div>
-      <div class="content">
-        <div class="header">Title</div>
-        <div class="meta">
-          <a class="group">Meta</a>
-        </div>
-        <div class="description">One or two sentence description that may go to several lines</div>
-        </div>
-      <div class="extra content">
-        <a class="right floated created">Arbitrary</a>
-        <a class="friends">Arbitrary</a>
-      </div>
-    </div>      
-    
-  </div>
-
-  <div class="column">
-    
-    <!-- Restaurant Card -->
-    <div class="ui card">
-      <div class="image">
-        <div class="ui dimmer">
-          <div class="content">
-            <div class="center">
-              <div class="ui inverted button">Add Friend
-              </div>
-            </div>
-          </div>
-        </div>
-        <img src="/static/images/wireframe/image.png">
-      </div>
-      <div class="content">
-        <div class="header">Title</div>
-        <div class="meta">
-          <a class="group">Meta</a>
-        </div>
-        <div class="description">One or two sentence description that may go to several lines</div>
-        </div>
-      <div class="extra content">
-        <a class="right floated created">Arbitrary</a>
-        <a class="friends">Arbitrary</a>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="column">
-    
-    <!-- Restaurant Card -->
-    <div class="ui card">
-      <div class="image">
-        <div class="ui dimmer">
-          <div class="content">
-            <div class="center">
-              <div class="ui inverted button">Add Friend
-              </div>
-            </div>
-          </div>
-        </div>
-        <img src="/static/images/wireframe/image.png">
-      </div>
-      <div class="content">
-        <div class="header">Title</div>
-        <div class="meta">
-          <a class="group">Meta</a>
-        </div>
-        <div class="description">One or two sentence description that may go to several lines</div>
-        </div>
-      <div class="extra content">
-        <a class="right floated created">Arbitrary</a>
-        <a class="friends">Arbitrary</a>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="column">
-    
-    <!-- Restaurant Card -->
-    <div class="ui card">
-      <div class="image">
-        <div class="ui dimmer">
-          <div class="content">
-            <div class="center">
-              <div class="ui inverted button">Add Friend
-              </div>
-            </div>
-          </div>
-        </div>
-        <img src="/static/images/wireframe/image.png">
-      </div>
-      <div class="content">
-        <div class="header">Title</div>
-        <div class="meta">
-          <a class="group">Meta</a>
-        </div>
-        <div class="description">One or two sentence description that may go to several lines</div>
-        </div>
-      <div class="extra content">
-        <a class="right floated created">Arbitrary</a>
-        <a class="friends">Arbitrary</a>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="column">
-    
-    <!-- Restaurant Card -->
-    <div class="ui card">
-      <div class="image">
-        <div class="ui dimmer">
-          <div class="content">
-            <div class="center">
-              <div class="ui inverted button">Add Friend
-              </div>
-            </div>
-          </div>
-        </div>
-        <img src="/static/images/wireframe/image.png">
-      </div>
-      <div class="content">
-        <div class="header">Title</div>
-        <div class="meta">
-          <a class="group">Meta</a>
-        </div>
-        <div class="description">One or two sentence description that may go to several lines</div>
-        </div>
-      <div class="extra content">
-        <a class="right floated created">Arbitrary</a>
-        <a class="friends">Arbitrary</a>
-      </div>
-    </div>
-
-  </div>
-
-</div>
-</div>
+      {% endfor %}
 
 
 </body>
