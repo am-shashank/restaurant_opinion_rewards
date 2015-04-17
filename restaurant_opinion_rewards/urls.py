@@ -10,18 +10,13 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
     url(r'^admin/$', include(admin.site.urls)),
     url(r'^signup/$', TemplateView.as_view(template_name="signup.html")),
-    url(r'^home', TemplateView.as_view(template_name="home.html")),
-    url(r'^checkin/$', TemplateView.as_view(template_name="checkin.html")),
-    # url(r'^', TemplateView.as_view(template_name="login.html")),
+    url(r'^checkin', TemplateView.as_view(template_name="checkin.html")),
     
-
-
     # methods
     url(r'^signup_user', signup),
-    # url(r'^login_user', login),
-    url(r'^test/$', get_table_list),
+    url(r'^home', home),
     url(r'^refer',send_referral),
-
-     url(r'^', login),
+    url(r'^logout',logout),
+    url(r'^', login),
 
 ]

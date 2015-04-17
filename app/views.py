@@ -143,7 +143,6 @@ def login(request):
         context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
     # set the entire session object
     request.session['context'] = context
-    print "Before getting coupons"
     # test_query(request)
 
     # fetch all the coupons associated with the current user
@@ -170,48 +169,53 @@ def login(request):
     request.session['context'] = context
     print "Context object after setting coupons"
     print context
-
-    return render_to_response("home.html", RequestContext(request, context))
+    return HttpResponseRedirect('/home')
+    # return render_to_response("home.html", RequestContext(request, context))
 
 
 @csrf_exempt
 def send_referral(request):
-    # get request
-    if request.method == 'GET':
-        # Redirect to home page if the session is set
-        if 'username' in request.session:
-            return HttpResponseRedirect('/home/')
-        else:
-            return render_to_response("login.html")
+    # redirect to login page if session has not been set
+    if 'username' not in request.session:
+        return render_to_response('login.html')
 
-    referral_data = request.POST
+    referral_data = request.GET
     phone_number = referral_data.get('phone')
-    username = request.session['username']
-    # insert hotel information into the request object when user clicks on card
-    # get hotel information from the request  object and create a message
-    message = "Hey Dhondu, Khana khayega... Dhondu hotel pe chalo paise bachaoo - " + username
+    restaurant_id = referral_data.get('restaurant_id')
+
+    # check if the friend has already been referred
+    try:
+        Refers.objects.get(restaurant_id=restaurant_id, referee_telephone=phone_number)
+    except Refers.DoesNotExist:
+        return HttpResponse("Your friend has already been refereed. Please refer another friend.")
 
     try:
-        user = Login.objects.get(user_id=username)
+        user = User.objects.filter(telephone=phone_number)
     except User.DoesNotExist:
-        message = "Account doesn't exist. Please create one here. <a href=\"/signup\">Login</a>"
-        # return HttpResponseRedirect('/signup')
-        return HttpResponse(message)
-    user = User.objects.get(id=username)
-    context = {
-        "first_name": user.first_name,
-        "credit": user.credit
-    }
+        return HttpResponse("Your friend is not on Restaurant opinion Rewards. You can only refer to \
+            to friends who are using our platform. Please invite your friend to use Restaurant \
+            opinion rewards.")
+
+    # insert to Refers table
+    refers = Refers(
+                    referer_id=request.session['username'],
+                    referee_id=user.id,
+                    restaurant_id=restaurant_id,
+                    referee_telephone=phone_number
+                    )
+    refers.save()
+
+    message = "Your friend has been sent a message and a coupon which can be redeemed at the restaurant. Once \
+    he checks into the restaurant. Your credit points will be increased."
 
     try:
         send_msg(message, phone_number)
     except:
         message = "Message Deliver Failed!"
-        # return HttpResponseRedirect('/signup')
         return HttpResponse(message)
     message = "Referral sent Successfully!"
-    # return HttpResponseRedirect('/signup')
     return HttpResponse(message)
+
 
 # send_msg function takes in message as string and phone_number as string
 def send_msg(intro_msg, client_number):
@@ -225,8 +229,8 @@ def send_msg(intro_msg, client_number):
 
     # Information corresponds to the phone number associated with the account that is used to send sms etc.
     # Then a message is created which is routed to the client_number through twilio number of the account.
-        
-    message = client.messages.create(
+    
+    client.messages.create(
         body=intro_msg,
         to=client_number,
         from_="+17707286369",
@@ -254,29 +258,3 @@ def logout(request):
     print request.session
     
     return HttpResponse('Success')
-
-
-def test_query(request):
-    if 'username' not in request.session:
-        return HttpResponseRedirect('/')
-    context = request.session['context']
-    coupons_list = []
-    for coupon in Coupons.objects.filter(user_id=request.session['username']):
-        # check for expires or filter them using query
-        d = collections.OrderedDict()
-        d['id'] = coupon.id
-        d['restaurant_id'] = coupon.restaurant_id
-        try:
-            d['restaurant_name'] = Restaurant.objects.get(id=coupon.restaurant_id)
-        except Restaurant.DoesNotExist:
-            message = "restaurant does not exist"
-            return HttpResponse(message)
-        d['deal'] = coupon.deal
-        d['image_path'] = coupon.image_path
-        coupons_list.append(coupon)
-    j = json.dumps(coupons_list)
-    context['coupons'] = j
-    request.session['context'] = context
-    print "Context obejct after setting coupons"
-    print context
-    # return render_to_response("home.html", RequestContext(request, request.session['context']))
