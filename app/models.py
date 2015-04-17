@@ -90,13 +90,13 @@ class Login(models.Model):
         db_table = 'Login'
 
 class Refers(models.Model):
-    referer_id = models.ForeignKey('User', related_name='Refers_referer_id', db_column='referer_id', primary_key=True)
-    referee_id = models.ForeignKey('User', related_name='Refers_referee_id', db_column='referee_id', primary_key=True)
+    referer_id = models.ForeignKey('User', related_name='Refers_referer_id', db_column='referer_id')
+    referee_id = models.ForeignKey('User', related_name='Refers_referee_id', db_column='referee_id')
     restaurant_id = models.ForeignKey('Restaurant', db_column='id', primary_key=True)
-
+    referee_telephone = models.ForeignKey('User', db_column='telephone', primary_key=True)
     class Meta:
         db_table = 'Refers'
-        unique_together = (('referer_id', 'referee_id', 'restaurant_id'),)
+        unique_together = (('restaurant_id', 'referee_telephone'),)
 
 class Survey(models.Model):
     id = models.IntegerField(primary_key=True)
