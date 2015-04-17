@@ -188,8 +188,8 @@ class Friends(models.Model):
 
 class Coupons(models.Model):
     id = models.IntegerField(primary_key=True)
-    user_id = models.ForeignKey('User')
-    restaurant_id = models.ForeignKey('Restaurant')
+    user_id = models.ForeignKey('User', db_column='user_id')
+    restaurant_id = models.ForeignKey('Restaurant', db_column='restaurant_id')
     deal = models.CharField(max_length=100)
     expires = models.DateTimeField()
     image_path = models.CharField(max_length=50)
