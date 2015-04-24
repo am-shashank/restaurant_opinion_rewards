@@ -72,9 +72,9 @@ class User(models.Model):
     first_name = models.CharField(max_length=50, blank=True, null=True)
     last_name = models.CharField(max_length=50, blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
-    email = models.CharField(max_length=20, blank=True, null=True)
+    email = models.CharField(max_length=20, blank=True, null=True, unique=True)
     credit = models.IntegerField(blank=True, null=True)
-    telephone = models.IntegerField(blank=True, null=True)
+    telephone = models.CharField(max_length=20, blank=True, null=True, unique=True)
     class Meta:
         # managed = False
         db_table = 'User'
@@ -92,8 +92,8 @@ class Login(models.Model):
 class Refers(models.Model):
     referer_id = models.ForeignKey('User', related_name='Refers_referer_id', db_column='referer_id')
     referee_id = models.ForeignKey('User', related_name='Refers_referee_id', db_column='referee_id')
-    restaurant_id = models.ForeignKey('Restaurant', db_column='id', primary_key=True)
-    referee_telephone = models.ForeignKey('User', db_column='telephone', primary_key=True)
+    restaurant_id = models.ForeignKey('Restaurant', db_column='restaurant_id', primary_key=True)
+    referee_telephone = models.CharField(max_length=20)
     class Meta:
         db_table = 'Refers'
         unique_together = (('restaurant_id', 'referee_telephone'),)

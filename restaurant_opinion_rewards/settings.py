@@ -80,6 +80,7 @@ WSGI_APPLICATION = 'restaurant_opinion_rewards.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+        'STORAGE_ENGINE': 'MyISAM / INNODB / ETC',
         'NAME': 'ResOpRew',
         'USER': 'awsmasteruser',
         'PASSWORD': 'brogrammer',
