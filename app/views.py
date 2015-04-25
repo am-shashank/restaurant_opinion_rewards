@@ -33,6 +33,10 @@ def get_table_list(request):
     return HttpResponse(html)
 
 
+@csrf_exempt
+def insert(request):
+    return HttpResponseRedirect('/signup')
+
 def signup(request):
     signup_data = request.POST
     id = signup_data.get('id')
@@ -191,21 +195,23 @@ def send_referral(request):
     referral_data = request.POST
     phone_number = referral_data.get('phone')
     restaurant_id = referral_data.get('restaurant_id')
-    print "Received referral for " + restaurant_id +" from "+ request.session['username']
+    print "Received referral for " + restaurant_id + " from " + request.session['username']
     # check if the friend has already been referred
     print phone_number
     cursor = connection.cursor()
-    cursor.execute('SELECT id from User where telephone=%s',(phone_number))
+    cursor.execute('SELECT id from User where telephone=\'' + phone_number+'\'')
+    # cursor.fetchone()
+    for row in cursor.fetchall():
+        referee_id = row[0]
     if cursor.rowcount == 0:
         print "friend not on resoprew"
         return HttpResponse("Your friend is not on Restaurant opinion Rewards. You can only refer to "
-        + "friends who are using our platform. Please invite your friend to use Restaurant"
-        + "opinion rewards.")
+                            +
+                            "friends who are using our platform. Please invite your friend to use Restaurant"
+                            + "opinion rewards.")
 
-    for row in cursor.fetchall():
-        referee_id = row[0]
-    
-    cursor.execute('select * from Refers where restaurant_id=%s and referee_telephone=%s', (restaurant_id, phone_number))
+    cursor.execute(
+        'select * from Refers where restaurant_id=%s and referee_telephone=%s', (restaurant_id, phone_number))
     if cursor.rowcount != 0:
         print "friend already referred"
         return HttpResponse("Your friend has already been refereed. Please refer another friend.")
@@ -213,9 +219,9 @@ def send_referral(request):
     # insert to Refers table
     try:
         cursor.execute("insert into Refers(referer_id, referee_id, restaurant_id, referee_telephone) values(%s, %s \
-        ,%s , %s)",(request.session['username'], referee_id, restaurant_id, phone_number))
+        ,%s , %s)", (request.session['username'], referee_id, restaurant_id, phone_number))
         message = "Your friend has been sent a message and a coupon which can be redeemed at the restaurant. Once \
-        he checks into the restaurant. Your credit points will be increased."
+        you check into the restaurant. Both of your credit points will be increased."
     except:
         return HttpResponse('Database insertion failed.')
 
@@ -272,10 +278,15 @@ def logout(request):
 
 @csrf_exempt
 def search_clicked(request):
+    print "Inside search_clicked"
     search_data = request.POST
     print "latitude: " + str(search_data.get('latitude'))
     print "longitue: " + str(search_data.get('longitude'))
-    context = {}
+    if 'context' in request.session:
+        context = request.session['context']
+    else:
+        context = {}
+
     if 'latitude' in search_data and 'longitude' in search_data:
         context["nearby_restaurants"] = get_nearby_restaurants(search_data.get('latitude'), search_data.get('longitude'))
     # set the session object
@@ -344,18 +355,6 @@ def save_uploaded_file(f, filename):
         destination.write(chunk)
     destination.close()
 
-def generate_survey(request):
-    survey_data=request.POST
-    survey_id = survey_data.get('survey_id')
-    # check if survey id already exists in response
-    cursor = connection.cursor()
-    cursor.execute('select * from Response where survey_id = %s',(survey_id))
-    # if cursor.rowcount == 0: # send standard 4 questions
-        
-    # else: # check the lowest ratings he gave and ask questions about that
-
-
-
 # class which parses the qrcode string and sets the bill data
 class BillData:
     def __init__(self, qrcode_text):
@@ -398,54 +397,144 @@ def generate_qr_code(filename, text):
     qr = pyqrcode.create(text)
     qr.png(filename, scale=6)
 
+def generate_survey(request):
+    user_id = request.session['username']
+    survey_id = request.session['survey_id']
+    bill_id = request.session['bill_id']
+    restaurant_id = request.session['restaurant_id']
+    cursor = connection.cursor()
+
+    # check if survey id already exists in response
+    if survey_id is None:
+        
+        
+        #Insert entry into Survey and saving the survey id in session
+        cursor.execute("Insert into Survey(id,user_id) values(%s, %s)",(survey_id,user_id))
+        survey_id = cursor.lastrowid
+        request.session['survey_id'] = survey_id
+
+        #Insert entry into Checkin Table
+        cursor.execute("Insert into Checkin(survey_id,bill_id,restaurant_id) values(%s,%s,%s)",survey_id,bill_id,restaurant_id)
+        
+        # send standard 4 questions
+        context['questions'] = get_questions("general")
+        return render_to_response("survey.html", RequestContext(request, context))
+
+    else:
+        survey_data = request.POST
+        question_ids = survey_data.get('question_ids').split('#')
+        choice_ids = survey_data.get('choice_ids').split('#')
+        text = survey_data.get('text')
+        question_choice_list = []
+        question_choice = ()
+        second_page = False
+        #Check if the response is for the first time or not.
+        if(question_ids[0] == 1):
+            second_page = True
+
+        #Iterate over all the responses of the user and store it in response table
+        for i in range(len(question_ids)):
+            if(choice_ids[i]>0):
+                text = "null"
+            else:
+                text = survey_data.get('text')                
+            question_choice = (question_ids[i],choice_ids[i])
+            question_choice_list.append(question_choice)
+            insert_into_response(choice_ids[i],question_ids[i],survey_id,text)
+        print "Data stored in Response table"
+
+        #Generate dyanamic Questions only if this is after the first page.        
+        if(second_page):
+            #Check the lowest ratings he gave and ask questions about that
+            question_choice_list.sort(key=lambda x: x[1])
+            if(question_choice_list[0][1] == 5):
+                #User is satisfied. So ask restaurant based questions.
+                context['questions'] = get_questions("restaurant")            
+                return render_to_response("survey.html", RequestContext(request, context))
+            else:
+                if(question_choice_list[0][1] < 5):
+                    cursor.execute('select category from Question where id = %s',(question_choice_list[0][0]))
+                    row = cursor.fetchone()
+                    category = row[3]
+                    context['questions'] = get_final_questions(bill_id,restaurant_id,category,user_id)
+                    return render_to_response("survey.html", RequestContext(request, context))
 
 
+def get_questions(category):
+    cursor = connection.cursor()
+    cursor1 = connection.cursor()
+    #Get the questions based on category
+    cursor.execute('select * from Question where category = %s',(category))
+    questions = {}
+    for row in cursor.fetchall():
+        question_id = row[0]
+        question_text = row[1]
+        questions[question_id] = {}
+        questions[question_id]['text'] = question_text
+        #Get the choices for the corresponding Question Id from the Has_Choice table
+        cursor1.execute('select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = %s',(question_id))
+        for choices in cursor1.fetchall():
+            choice_id = choices[0]
+            choice_text = choices[1]
+            questions[question_id][choice_id] = choice_text
+
+    questions["is_survey"] = "True"
+    return questions
+
+def insert_into_response(choice_id,question_id,survey_id,text):
+    cursor = connection.cursor()
+    cursor.execute("Insert into Response(choice_id,question_id,survey_id,text) values(%s,%s,%s,%s)",(choice_id,question_id,survey_id,text))
+
+def get_final_questions(bill_id,restaurant_id,category,user_id):
+    cursor = connection.cursor()
+    cursor1 = connection.cursor()
+
+    cursor.execute('select * from Question q where q.category = %s and q.id not in \
+            (select question_id from Response r,Survey s where r.survey_id = s.id \
+            and s.user_id = %s and s.restaurant_id = %s',(category,user_id,restaurant_id))
+    cnt = 0
+    for row in cursor.fetchall():
+        #Fetch two questions from the list and then break
+        if cnt == 2:
+                break
+        question_id = row[0]
+        question_text = row[1]
+        questions[question_id] = {}
+        questions[question_id]['text'] = question_text
+        #Get the choices for the corresponding Question Id from the Has_Choice table
+        cursor1.execute('select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = %s',(question_id))
+        for choices in cursor1.fetchall():
+                choice_id = choices[0]
+                choice_text = choices[1]
+                questions[question_id][choice_id] = choice_text
+        cnt+=1
 
 
+    #Ask a question from the Bill
+    cursor.execute('select item_name from Has_Bill where bill_id = %s and restaurant_id = %s \
+        ORDER BY RAND()  LIMIT 1')
+    first_entry = cursor.fetchone()
+    item_name = first_entry[0]
+    inserted_id = insert_into_question(item_name)
+    questions[inserted_id] = {}
+    cursor.execute('select * from Choice where id>0 and id<6')
+    for choices in cursor.fetchall():
+        choice_id = choices[0]
+        choice_text = choices[1]
+        questions[inserted_id][choice_id] = choice_text
 
+    #Ask a generic question for Other comments
+    other_comments = "Enter any additional comments:"
+    other_comments_id = 0
+    questions[other_comments_id]['text'] = other_comments
 
+    #Set the flag to indicate that no more surveys
+    questions["is_survey"] = "False"
+    return questions
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def insert_into_question(item_name):
+    text = "How would you rate " + item_name + "?"
+    cursor = connection.cursor()
+    cursor.execute("Insert into Question(text) values(%s)",(text))
+    inserted_id = cursor.lastrowid
+    return inserted_id

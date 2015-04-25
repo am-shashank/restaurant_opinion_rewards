@@ -14,7 +14,8 @@ urlpatterns = [
     url(r'^signup/$', TemplateView.as_view(template_name="signup.html")),
     
     # methods
-    url(r'^signup_user', signup),
+    url(r'^insert', insert),
+    url(r'^create_user', signup),
     url(r'^search', search_clicked),
     url(r'^home', home),
     url(r'^survey', survey),

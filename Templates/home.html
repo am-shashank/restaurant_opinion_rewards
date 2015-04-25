@@ -24,19 +24,47 @@
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
   <script src="/static/js/autocomplete.js"></script>
+  <script src="/static/js/post.js"></script>
   <link rel="stylesheet" type="text/css" href="/static/css/modal-window.css"/>
   <script src="/static/js/modal-window.js" type="text/javascript"></script>
 
   <script type="text/javascript">
   	google.maps.event.addDomListener(window, 'load', initialize);
   </script>
- 
+
+
+   
   <!-- Used with Tab History !-->
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js"></script>
   <script src="/static/js/semantic.js"></script>
 </head>
 
 <body id="sink">
+
+<script type="text/javascript">
+  function search_button_clicked() {
+  alert("Search button clicked");
+  var search_data = {}
+    geocoder = new google.maps.Geocoder();
+    var address = document.getElementById("my-address").value;
+
+    geocoder.geocode( { 'address': address}, function(results, status) {
+    	if (status == google.maps.GeocoderStatus.OK) {
+    	search_data['latitude'] = results[0].geometry.location.lat();
+        search_data['longitude'] = results[0].geometry.location.lng();
+        alert(search_data['latitude']);
+        alert("Before sending post");  
+        post('/search',search_data, 'POST');
+        alert("After sending post")
+      } 
+      else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }       
+    });
+
+   
+	}
+</script>
 
 <div class="ui grid">
 	<div class="three column row">
@@ -50,7 +78,7 @@
 			 <div class="ui remote search">
 			    <div class="ui icon input">
 			      	<input type="text" placeholder="Remote search..." id = "my-address" class="prompt">
-			      	<div class="search_align">
+			      	<div class="search_align" id = "search_button" onclick="search_button_clicked();">
 			     	 <i class="search icon"></i>
 			     	 </div>
 			    </div>
