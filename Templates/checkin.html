@@ -17,42 +17,57 @@
 <script src="https://maps.googleapis.com/maps/api/js"></script>
 <script>
       function initialize() {
+        var latitude = $('#latitude').attr('value');
+        var longitude = $('#longitude').attr('value');
         var mapCanvas = document.getElementById('map-canvas');
         var mapOptions = {
-          center: new google.maps.LatLng(44.5403, -78.5463),
-          zoom: 8,
+          center: new google.maps.LatLng(latitude, longitude),
+          zoom: 15,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         }
         var map = new google.maps.Map(mapCanvas, mapOptions)
+        var marker = new google.maps.Marker({
+          position: new google.maps.LatLng(latitude, longitude),
+          map: map,
+          title: document.getElementById('restaurant_name').innerHTML
+        });
       }
       google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
+</script>
+<link rel="stylesheet" type="text/css" href="/static/css/modal-window.css"/>
+<script src="/static/js/modal-window.js" type="text/javascript"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script>
 function submit_form()
 {
+  var $ht = 0.25*$(window).height();
+  var $wt = 0.25*$(window).width();
   var $phone = $('#phone').val();
+  var $restaurant_id = $('#restaurant_id').attr('value');
   var data = {
       'phone': $phone,
+      'restaurant_id':  $restaurant_id
     };
 
     $.ajax({
-                      type: "POST",
-                      url: "/refer",
-                      data: data,
-                      success: function(result){
-                          alert(result);
-                      },
-                      error: function(error) {
-                          alert("Message Delivery Failed"); 
-                      } 
-                  });
+            type: "POST",
+            url: "/refer",
+            data: data,
+            success: function(result){
+              $modal.open({content: result, height: $ht, width: $wt});
+            },
+            error: function(error) {
+              $modal.open({content: "Message delivery failed.", height: $ht, width: $wt});
+            } 
+          });
 }
 
 function submit_qrcode()
 {
   var params = {}
   params["qrcode"] = document.getElementById("qrcode").value;
-  post_internal("/qrcode", params, "POST");
+  params["restaurant_id"] = $('#restaurant_id').attr('value');
+  post_internal("/survey", params, "POST");
 }
 
 function post_internal(path, params, method) {
@@ -80,6 +95,44 @@ function post_internal(path, params, method) {
     form.submit();
 }
 
+reviews_html = "<div class=\"ui grid\">"+
+
+      "<div class=\"row\">"+
+        "<div class=\"two wide column\">"+
+        "</div>"+
+        "<div class=\"twelve wide column\" align=\"center\">"+
+          "<div> madafaka </div>"+
+        "</div>"+
+        "<div class=\"two wide column\">"+
+        "</div>"+
+      "</div>"+ "</div>";
+$(document).ready(function(){ 
+  $.ajax({
+        type: "GET",
+        url: "/get_reviews?id=" + $('#restaurant_id').attr('value'),
+      })
+  .done(function(data){
+    //alert(JSON.stringify(data));
+    reviews_html = "";
+    var num_reviews = Object.keys(data).length;
+    for(var i=1; i<=num_reviews; i++)
+    {
+      reviews_html = reviews_html + "<div class=\"ui grid\">"+
+
+      "<div class=\"row\">"+
+        "<div class=\"two wide column\">"+
+        "</div>"+
+        "<div class=\"twelve wide column\" align=\"center\">"+
+          "<div>"+ data["review_" + i] +"</div>"+
+        "</div>"+
+        "<div class=\"two wide column\">"+
+        "</div>"+
+      "</div>"+ "</div>";
+    }
+    document.getElementById("reviews").innerHTML=reviews_html;
+  })
+});
+
 </script>
 
   <!-- Standard Meta -->
@@ -88,7 +141,7 @@ function post_internal(path, params, method) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
   <!-- Site Properities -->
-  <title>Kitchen Sink - Semantic</title>
+  <title>Restaurant Opinion Rewards</title>
 
   <link rel="stylesheet" type="text/css" href="/static/css/semantic.css">
   <link rel="stylesheet" type="text/css" href="/static/css/kitchensink.css">
@@ -111,14 +164,17 @@ function post_internal(path, params, method) {
     <div class="ui dimmer">
       <div class="content">
           <div class="center">
-              <div class="ui inverted button">Add Friend</div>
+              <div class="ui inverted button">Restaurant</div>
           </div>
        </div>
     </div>
      <img src="/static/images/wireframe/image.png">
   </div>
   <div class="content">
-    <div class="header">Dhondu Hotel</div>
+    <div class="header" id="restaurant_name">{{ restaurant.name }}</div>
+    <input type="hidden" id="restaurant_id" style="display:none;" value={{ restaurant.id }} />
+    <input type="hidden" id="latitude" style="display:none;" value={{ restaurant.latitude }} />
+    <input type="hidden" id="longitude" style="display:none;" value={{ restaurant.longitude }} />
   </div>
 
 </div>
@@ -144,26 +200,26 @@ function post_internal(path, params, method) {
             </div>
           <div class="two wide column">
             <div class="submit_align">
-            <div class="ui button" onclick="submit_form()">Submit</div>
+            <div class="ui button" onclick="submit_form()">Refer your friend</div>
             </div>
           </div>
         </div>
       </div>
-      <form action="http://www.cs.tut.fi/cgi-bin/run/~jkorpela/echo.cgi" enctype="multipart/form-data" method="post" > 
-      <div class="ui grid">
-          <div class="row">
-            <div class="fourteen wide column">
-
-              <div class="field">
-              <label>Upload QR code image here</label> 
-                  <input class="ui button" type="file" name="datafile" size="40">
+      <form action="/survey" enctype="multipart/form-data" method="post" > 
+        <div class="ui grid">
+            <div class="row">
+              <div class="fourteen wide column">
+                <div class="field">
+                <label>Upload QR code image here</label> 
+                    <input class="ui button" type="file" name="qrcode_image" size="40">
+                    <input type="hidden" id="survey_restaurant_id" style="display:none;" value={{ restaurant.id }} />
+                </div>
               </div>
+              <div class="two column wide">
+              <input class="ui button"  id="checkin" type="submit" value="Check in to restaurant">
             </div>
-            <div class="two column wide">
-            <input class="ui button"  type="submit" value="Submit">
           </div>
         </div>
-      </div>
       </form>
        </div>   
     
@@ -184,6 +240,10 @@ function post_internal(path, params, method) {
       <div class="two wide column">
       </div>
     </div>
+  </div>
+
+  <div id="reviews">
+    
   </div>
 <!--form enctype="multipart/form-data" method="post" action="http://zxing.org/w/decode">
 <input name="f" type="file"/>
