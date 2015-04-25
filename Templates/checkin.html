@@ -161,21 +161,21 @@ function post_internal(path, params, method) {
           </div>
         </div>
       </div>
-      <form action="http://www.cs.tut.fi/cgi-bin/run/~jkorpela/echo.cgi" enctype="multipart/form-data" method="post" > 
-      <div class="ui grid">
-          <div class="row">
-            <div class="fourteen wide column">
-
-              <div class="field">
-              <label>Upload QR code image here</label> 
-                  <input class="ui button" type="file" name="datafile" size="40">
+      <form action="/survey" enctype="multipart/form-data" method="post" > 
+        <div class="ui grid">
+            <div class="row">
+              <div class="fourteen wide column">
+                <div class="field">
+                <label>Upload QR code image here</label> 
+                    <input class="ui button" type="file" name="qrcode_image" size="40">
+                    <input type="hidden" id="survey_restaurant_id" style="display:none;" value={{ restaurant.id }} />
+                </div>
               </div>
+              <div class="two column wide">
+              <input class="ui button"  id="checkin" type="submit" value="Check in to restaurant">
             </div>
-            <div class="two column wide">
-            <input class="ui button"  type="submit" value="Check in to restaurant">
           </div>
         </div>
-      </div>
       </form>
        </div>   
     

@@ -1,0 +1,6 @@
+restaurant_name: name
+bill_id: id
+item1: name; quantity: number; price: number
+item2: name; quantity: number; price: number
+total: number
+time: 4

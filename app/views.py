@@ -2,14 +2,18 @@ from django.shortcuts import render, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 from django.template import RequestContext
 import datetime
-from twilio.rest import TwilioRestClient 
+from twilio.rest import TwilioRestClient
 from app.models import *
 import collections
 import json
 from django.db import connection
 from django.db import transaction
+import time
+# import qrtools
+import pyqrcode
 
 cursor = connection.cursor()
 
@@ -287,7 +291,7 @@ def checkin(request):
     # fetch data about restaurant and set the context object
     # id, name, full_address, latitude, longitude, stars, image_path, reviews
     restaurant = Restaurant.objects.get(id=restaurant_id)
-    # context dictionary which will be used in 
+    # context dictionary which will be used in
     context = {}
     context['restaurant'] = restaurant
     reviews = Review.objects.filter(restaurant_id=restaurant_id)
@@ -302,8 +306,46 @@ def checkin(request):
 def get_choices(question_id):
     pass
 
+@require_POST
+def survey(request):
+    checkin_data = request.POST
+    restaurant_id = checkin_data.get('survey_restaurant_id')
+    # save the qr code file using the current timestamp as the filename
+    filename = 'database_images/'+ time.time()
+    save_uploaded_file(request.FILES['qrcode_image'], filename)
+    # decode the file
+    qr = qrtools.QR()
+    qr.decode(filename)
+    print qr.data
+
+    # parse the decoded qr code string into a data structure
+    bd = BillData(qr.data)
+
+    cursor = connection.cursor()
+
+    # get restaurant_id from restaurant name
+    cursor.execute('select id from restaurant where name=%s',(bd.restaurant_name))
+    row = cursor.fetchone()
+    if row is not None:
+        restaurant_id = row[0]
+    else:
+        raise 'Restaurant id not found'
+    cursor.execute('insert into Bill(id, restaurant_id, amount, time) values(%s, %s, %s, %d)',(bd.bill_id, restaurant_id, bd.total, bd.time))
+    for i in range(len(bd.item_name)):
+        cursor.execute('insert into Has_Bill(item_name, restaurant_id, bill_id, quantity) values(%s, %s, %s)', (bd.item_name[i], bd.restaurant_id, bd.bill_id, bd.quantity))
+
+    # call generate survey
+    return HttpResponse('Success')
+
+
+def save_uploaded_file(f, filename):
+    destination = open(filename, 'wb+')
+    for chunk in f.chunks():
+        destination.write(chunk)
+    destination.close()
+
 def generate_survey(request):
-    survey_data = request.POST
+    survey_data=request.POST
     survey_id = survey_data.get('survey_id')
     # check if survey id already exists in response
     cursor = connection.cursor()
@@ -311,6 +353,50 @@ def generate_survey(request):
     # if cursor.rowcount == 0: # send standard 4 questions
         
     # else: # check the lowest ratings he gave and ask questions about that
+
+
+
+# class which parses the qrcode string and sets the bill data
+class BillData:
+    def __init__(self, qrcode_text):
+        self.item_name=[]
+        self.item_quantity=[]
+        self.item_price=[]
+        for line in qrcode_text.splitlines():
+            key_value=line.split(':', 2)
+            if len(key_value) >= 2:
+                if key_value[0] == 'restaurant_name':
+                    self.restaurant_name=key_value[1].strip()
+                elif key_value[0] == 'bill_id':
+                    self.bill_id=key_value[1].strip()
+                elif key_value[0].startswith('item') is True:
+                    for item_detail in line.split(';'):
+                        detail=item_detail.split(':')
+                        print detail[0].strip()
+                        if detail[0].strip().startswith('item'):
+                            self.item_name.append(detail[1].strip())
+                        elif detail[0].strip() == 'quantity':
+                            self.item_quantity.append(detail[1].strip())
+                        elif detail[0].strip() == 'price':
+                            self.item_price.append(detail[1].strip())
+                elif key_value[0] == 'total':
+                    self.total=key_value[1].strip()
+                elif key_value[0] == 'time':
+                    self.time=key_value[1].strip()
+
+    def printObj(self):
+        print "Restaurant Name:" + self.restaurant_name
+        print "Bill ID: " + self.bill_id
+        print "Total: " + self.total
+        for i in range(len(self.item_name)):
+            print "item_name: "+ self.item_name[i] + " quantity: " + self.item_quantity[i] + " price:" + self.item_price[i]
+        return
+
+def generate_qr_code(filename, text):
+    filename = "database_images/qr_code/bill1.png"
+    text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
+    qr = pyqrcode.create(text)
+    qr.png(filename, scale=6)
 
 
 
