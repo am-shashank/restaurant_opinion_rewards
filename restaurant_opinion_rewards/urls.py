@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^refer',send_referral),
     url(r'^logout',logout),
     url(r'^checkin', checkin),
+    url(r'^get_reviews', get_reviews),
     url(r'^', login),
 
 ]
