@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Standard Meta -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <!-- Site Properities -->
+  <title>Home Page</title>
+
+  {% load staticfiles %}
+  <link rel="stylesheet" type="text/css" href="/static/css/semantic.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/kitchensink.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/homepage.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/modal-window.css"/>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
+
+  <!-- Used with Tab History !-->
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.address/1.6/jquery.address.min.js"></script>
+  <script src="/static/js/semantic.js"></script>
+  <script src="/static/js/homepage.js"></script>
+  <script src="/static/js/post.js"></script>
+  <script src="/static/js/modal-window.js" type="text/javascript"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+  <script src="/static/js/autocomplete.js"></script>
+  <script type="text/javascript">google.maps.event.addDomListener(window, 'load', initialize);</script>
+
+
+
+</style>
+</head>
+<body>
+<html>
+  <head>
+   <link rel="stylesheet" type="text/css" href="/static/css/semantic.css">
+   <link rel="stylesheet" type="text/css" href="/static/css/kitchensink.css">
+   <link rel="stylesheet" type="text/css" href="/static/css/homepage.css">
+
+  </head>
+
+  <body>
+  <div class="ui secondary segment">
+ <div class="ui grid">
+  <div class="four column row">
+    <div class="column">
+    <div align="center">
+      <h1 class="ui header">DHONDU BACHHA </h1>
+    </div>
+    </div>
+    <!--<form action="/login_user" method="POST">-->
+      <div class="column">
+     </div>
+    
+     <div class="column">
+     </div>
+     <div class="column">
+      <div align="center">
+      <br>
+      <button class="ui red button" onclick="go_home()">
+        Home
+    </button>
+    </div>
+    </div>
+  </div>
+</div>
+</div>
+    <h3 class="ui header" align="center">
+      Signup
+    </h3>
+    <br><br>
+    <div align="center">
+    First Name
+    </div>
+    <br> 
+    <div align="center">
+    <div class="ui icon input" >
+      <input type="text" name="first name" id="id_firstname">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Last Name
+    </div>
+    <br> 
+    <div align="center">
+    <div class="ui icon input">
+      <input type="text" name="last name" id="id_lastname">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Email Id
+    </div>
+    <br>
+    <div align="center">
+    <div class="ui icon input">
+      <input type="email" name="email" id="id_email">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Telephone Number
+    </div>
+    <br>
+    <div align="center">
+    <div class="ui icon input">
+      <input type="tel" name="phone" id="id_phone">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Date of Birth
+    </div>
+    <br>
+    <div align="center">
+    <div class="ui icon input">
+      <input type="date" step="10"name="dob" id="id_dob">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Username
+    </div>
+    <br>
+    <div align="center">
+    <div class="ui icon input">
+        <input type="text" name="username" id="id_signup_username">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Password
+    </div>
+    <br>
+    <div align="center">
+    <div class="ui icon input">
+        <input type="password" name="password" id="id_signup_password">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    Confrim Password
+    </div>
+    <br>
+    <div align="center">
+    <div class="ui icon input">
+        <input type="password" name="confirm password" id="id_cpassword">
+    </div>
+    </div>
+    <br><br><br>
+    <div align="center">
+    <button class="ui blue button" onclick="send_signup()">
+        Sign up
+    </button>
+    </div>
+    <br>
+    <br>
+
+  <script type="text/javascript">
+
+  function send_signup()
+    {
+      var $username = $('#id_signup_username').val();
+        var $password = $('#id_signup_password').val();
+        var $cpassword = $('#id_cpassword').val();
+        var $firstname = $('#id_firstname').val();
+        var $lastname = $('#id_lastname').val();
+        var $email = $('#id_email').val();
+        var $phone = $('#id_phone').val();
+        var $dob = $('#id_dob').val();
+        var data = {
+          'username': $username,
+            'password': $password,
+            'cpassword': $cpassword,
+            'firstname': $firstname,
+            'lastname': $lastname,
+            'email': $email,
+            'dob': $dob,
+            'phone': $phone,
+      };
+
+
+      $.ajax({
+
+                type: "POST",
+                url: "/create_user",
+                data: data,
+                success: function(result){
+                  alert(result);
+                },
+                error: function(error) {
+                  alert(error); 
+                } 
+            });
+
+
+    }
+</script>
+<script type="text/javascript">
+  function go_home()
+  {
+    var data = new Object();
+    post('/display', data, 'POST');
+  }
+
+</script>
+
+  </body>
+</html>
+</body>

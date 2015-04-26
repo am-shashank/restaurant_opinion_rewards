@@ -11,8 +11,8 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
     url(r'^manage/', include(admin.site.urls)),
     url(r'^admin/$', include(admin.site.urls)),
-    url(r'^signup/$', TemplateView.as_view(template_name="signup.html")),
-    
+    url(r'^signup', TemplateView.as_view(template_name="signup.html")),
+    url(r'^index', TemplateView.as_view(template_name="login.html")),
     # methods
     url(r'^insert', insert),
     url(r'^create_user', signup),
@@ -23,6 +23,9 @@ urlpatterns = [
     url(r'^logout',logout),
     url(r'^checkin', checkin),
     url(r'^get_reviews', get_reviews),
+    url(r'^display', display),
+    url(r'^delete_coupon', delete_coupon),
+    url(r'^generate_survey', generate_survey),
     url(r'^', login),
 
 ]

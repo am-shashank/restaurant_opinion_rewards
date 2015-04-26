@@ -63,7 +63,7 @@
               <div class="ui red button" id="login_button">Login</div>
             </div>
             <div class="column" align="right">
-              <button class="ui red button" onclick="signup()">Sign up</button>
+              <button class="ui red button" onclick="insert()">Sign up</button>
             </div>
           </div>
       </div>
@@ -71,68 +71,13 @@
   </div>
 </div>
 </div>
-<!-- Signup Popup using Modal Window-->
+
 <script type="text/javascript">
-
- function signup() {
-        
-        var $ht = 0.75*$(window).height();
-        var $wt = 0.50*$(window).width();
-        var $text = $("<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/semantic.css\"> <link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/kitchensink.css\"><link rel=\"stylesheet\" type=\"text/css\" href=\"/static/css/homepage.css\"></head>"
-          +"<body>"
-            +"<h3 class=\"ui header\" align=\"center\">Signup</h3><br>"
-
-            + "<form> User ID: "
-              +"<div class=\"ui icon input\">"
-                  +"<input type=\"text\" name=\"username\">"
-              +"</div><br><br><br>"
-
-              + "First Name<br>"
-              + "<div class=\"ui icon input\">"
-                  +"<input type=\"text\" name=\"first_name\">"
-              +"</div><br><br><br>"
-
-              + "Last Name<br>" 
-                +"<div class=\"ui icon input\">"
-                  +"<input type=\"text\" name=\"last_name\">"
-              +"</div><br><br><br>"
-
-              +"Email ID<br> "
-                +"<div class=\"ui icon input\">"
-                  +"<input type=\"email\" name=\"email\">"
-              +"</div><br><br><br>"
-
-              +"Telephone Number<br>" 
-                +"<div class=\"ui icon input\">"
-                  +"<input type=\"tel\" name=\"telephone\">"
-              +"</div><br><br><br>"
-
-              +"Date of Birth<br>"
-                +"<div class=\"ui icon input\">"
-                  +"<input type=\"date\" step=\"10\"name=\"dob\">"
-                +"</div><br><br><br>"
-
-              +"Password<br>"
-                +"<div class=\"ui icon input\">"
-                  +"<input type=\"password\" name=\"password\">"
-                +"</div><br><br><br>"
-
-              +"Confrim Password<br>"
-                +"<div class=\"ui icon input\">"
-                  +"<input type=\"password\" name=\"confirm_password\">"
-                +"</div><br><br><br>"
-
-              +"<button class=\"ui blue button\" id=\"signup_button\">Sign up</button></form>"
-
-              +"<script type=text/javascript">
-                  + "$(\"#signup_button\").click(function() { "
-                        + 
-                  + "}"
-              +"</script>"
-          +"</body></html>");
-       //alert("hide");
-       $modal.open({content: $text, height: $ht, width: $wt});
-     };
+  function insert()
+  {
+    var data = new Object();
+    post('/insert',data, 'POST');
+  }
 </script>
 
 <script type="text/javascript">
@@ -176,7 +121,7 @@
   });
 
   function search_button_clicked() {
-  alert("Search button clicked");
+  //alert("Search button clicked");
   var search_data = {}
     geocoder = new google.maps.Geocoder();
     var address = document.getElementById("my-address").value;

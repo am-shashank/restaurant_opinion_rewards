@@ -43,7 +43,7 @@
 
 <script type="text/javascript">
   function search_button_clicked() {
-  alert("Search button clicked");
+  //alert("Search button clicked");
   var search_data = {}
     geocoder = new google.maps.Geocoder();
     var address = document.getElementById("my-address").value;
@@ -52,10 +52,10 @@
     	if (status == google.maps.GeocoderStatus.OK) {
     	search_data['latitude'] = results[0].geometry.location.lat();
         search_data['longitude'] = results[0].geometry.location.lng();
-        alert(search_data['latitude']);
-        alert("Before sending post");  
+        //alert(search_data['latitude']);
+        //alert("Before sending post");  
         post('/search',search_data, 'POST');
-        alert("After sending post")
+        //alert("After sending post")
       } 
       else {
         alert("Geocode was not successful for the following reason: " + status);
@@ -117,17 +117,19 @@
 
 
 				<div class="ui divided very relaxed animated list">
-					
-					{% for key, value in coupons.items %}
-						<div class="item">
-					        <img src={{ value.image_path }} class="ui top aligned avatar image">
-					        <div class="content">
-					          <div class="header">{{ value.restaurant_name }}</div>
-					          {{ value.deal }}
-					        </div>
-					    </div>
-					{% endfor %}			  	
-    			</div>			
+                    
+                    {% for key, value in coupons.items %}
+                        <div class="item">
+                        <a href={{ value.query_string }} target="_blank" coupon_id={{ value.id }} id="coupon_click" onclick="delete_coupon">
+                            <img src={{ value.image_path }} class="ui top aligned avatar image">
+                            <div class="content">
+                              <div class="header">{{ value.restaurant_name }}</div>
+                              {{ value.deal }}
+                            </div>
+                         </a>
+                        </div>
+                    {% endfor %}                  
+                </div> 			
 			</div>
 		</div>
 		<div class="thirteen wide column">
@@ -146,7 +148,7 @@
 						        		</div>
 						     		 </div>
 						   		</div>
-						   		 <img src="/static/images/wireframe/image.png">
+						   		 <img src={{ value1.image_path }}>
 						 	</div>
 
 							<div class="content">
@@ -175,6 +177,28 @@
 	</div>
 </div>
 <script>
+
+	$("#coupon_click").click(function() {
+        var $input = $(this);
+        var $couponID = $input.attr("coupon_id");
+        alert("clciked Coupon : "+$couponID);
+        var data = {
+              'coupon_id': $couponID,
+           };
+        $.ajax({
+            type: "POST",
+            url: "/delete_coupon",
+            data: data,
+            success: function(){
+
+            },
+            error: function(error) {
+                alert(error); 
+            } 
+        });
+
+    });
+
 	//document.getElementById("logout").addEventListener("click", deleteSession);
 	$("#logout").click(function() {
 		// send empty dummy data

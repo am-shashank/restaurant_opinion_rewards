@@ -38,45 +38,46 @@ def get_table_list(request):
 def insert(request):
     return HttpResponseRedirect('/signup')
 
+@csrf_exempt
+def display(request):
+    return HttpResponseRedirect('/index')
+
+@csrf_exempt
+@require_POST
 def signup(request):
+    print "Signup function is getting executed"
+
     signup_data = request.POST
-    id = signup_data.get('id')
-    first_name = signup_data.get('first_name')
-    last_name = signup_data.get('last_name')
+    id = signup_data.get('username')
+    first_name = signup_data.get('firstname')
+    last_name = signup_data.get('lastname')
     dob = signup_data.get('dob')
     email = signup_data.get('email')
     password = signup_data.get('password')
     # facebook_id = signup_data.get('facebook_id')
-    phone = signup_data.get('phone')
-    users = User.objects.all()
+    telephone = signup_data.get('phone')
     message = ""
-    for user in users:
-        if user.id == id:
-            message = "Account already exists. Please login here. <a href="//">Login</a>"
-            return HttpResponse(message)
 
+    credit = 0
+    print "It's a new account"
     # create new User and save it.
-    new_user = User(
-        id=id,
-        first_name=first_name,
-        last_name=last_name,
-        dob=dob,
-        email=email,
-        credit=0
-    )
-    new_user.save()
+    cursor = connection.cursor()
+    try:
+        cursor.execute('insert into User(id, first_name, last_name, dob, email, credit, telephone) values(%s, %s, %s, %s, %s, %s, %s)', (id, first_name, last_name, dob, email, credit, telephone))
+    except:
+        return HttpResponse("Error inserting to database. Please Try again!")
+    try:
+        cursor.execute('insert into Login(user_id, password) values(%s, %s)', (id, password))
+    except:
+        return HttpResponse("Username already exists. Please try with a different username!")
+   
+    print "Created User"
 
     # create login credentials and save it
-    '''new_login = Login(
-        user=id,
-        facebook_id=facebook_id,
-        password=password)
-    new_login.save()'''
 
     # save friend list to database
 
     # TO DO: send welcome email
-    request.session['userid'] = id
     message = "Successfully created account."
     return HttpResponse(message)
 
@@ -86,7 +87,7 @@ def get_nearby_restaurants(latitude, longitude):
     startlat = float(latitude)
     startlng = float(longitude)
     cursor = connection.cursor()
-    cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
+    cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, image_path, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
     results = cursor.fetchall()
     print results
     # 4 indicates number of columns in the grid on home.html
@@ -103,6 +104,7 @@ def get_nearby_restaurants(latitude, longitude):
         d['stars'] = row[3]
         d['latitude'] = row[4]
         d['longitude'] = row[5]
+        d['image_path'] = row[6]
         if i % 4 == 0:
             j += 1
             objects[str(j)] = {}
@@ -556,3 +558,47 @@ def insert_into_question(item_name):
     cursor.execute("Insert into Question(text) values(%s)",(text))
     inserted_id = cursor.lastrowid
     return inserted_id
+
+@csrf_exempt
+def delete_coupon(request):
+    coupon_data = request.POST
+    coupon_id = coupon_data.get('coupon_id')
+    print "Coupon Id : "+str(coupon_id)
+
+    try:
+        Coupons.objects.filter(id=coupon_id).delete()
+        print "deleted Coupon from Database : "+str(coupon_id)
+    except:
+        print "Error in deleteing coupon :"+str(coupon_id)+ " from Coupons Model."
+
+    if 'context' in request.session:
+        context = request.session['context']
+    else:
+        context = {}
+
+    coupons = {}
+    i = 1
+    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+        coupons[str(i)] = {}
+        # check for expires or filter them using query
+        d = {}
+        d['id'] = coupon.id
+        d['query_string'] = "static/images/coupons/coupon"+str(coupon.id)+".jpeg"
+        print d['query_string']
+        # coupon.restaurant_id is actually restuarant object
+        d['restaurant_id'] = coupon.restaurant_id.id
+        try:
+            d['restaurant_name'] = coupon.restaurant_id.name
+        except Restaurant.DoesNotExist:
+            message = "restaurant does not exist"
+            return HttpResponse(message)
+        d['deal'] = coupon.deal
+        d['image_path'] = coupon.image_path
+        coupons[str(i)] = d
+        i += 1
+
+    context['coupons'] = coupons
+    request.session['context'] = context
+    print "Context object after setting coupons"
+    print context
+    return HttpResponseRedirect('/home')
