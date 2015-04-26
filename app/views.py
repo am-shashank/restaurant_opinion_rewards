@@ -11,12 +11,15 @@ import collections
 import json
 from django.db import connection
 from django.db import transaction
+from django.conf import settings
 import time
+import os
+import qrtools
+import pyqrcode
 from django.http import JsonResponse
-# import qrtools
-#import pyqrcode
 
 cursor = connection.cursor()
+
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -57,6 +60,13 @@ def signup(request):
     # facebook_id = signup_data.get('facebook_id')
     telephone = signup_data.get('phone')
     message = ""
+<<<<<<< HEAD
+=======
+    for user in users:
+        if user.id == id:
+            message = "Account already exists. Please login here. <a href=" // ">Login</a>"
+            return HttpResponse(message)
+>>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
 
     credit = 0
     print "It's a new account"
@@ -87,9 +97,13 @@ def get_nearby_restaurants(latitude, longitude):
     startlat = float(latitude)
     startlng = float(longitude)
     cursor = connection.cursor()
+<<<<<<< HEAD
     cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, image_path, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
+=======
+    cursor.execute(
+        'SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48', (startlat, startlng))
+>>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
     results = cursor.fetchall()
-    print results
     # 4 indicates number of columns in the grid on home.html
     total_required_results = len(results) - len(results) % 4
     # 2 level dictionary indices
@@ -114,12 +128,11 @@ def get_nearby_restaurants(latitude, longitude):
             break
     return objects
 
+
 @csrf_exempt
 def login(request):
     # get request
     login_data = request.POST
-    print "latitude: " + str(login_data.get('latitude'))
-    print "longitue: " + str(login_data.get('longitude'))
     if request.method == 'GET':
         # Redirect to home page if the session is set
         if 'username' in request.session:
@@ -127,11 +140,11 @@ def login(request):
             return HttpResponseRedirect('/home/')
         elif 'context' in request.session:
             print request.session['context']
-            return render_to_response("login.html",RequestContext(request, request.session['context']))
+            return render_to_response("login.html", RequestContext(request, request.session['context']))
         else:
             return render_to_response("login.html")
     # verify login credentials
-    
+
     username = login_data.get('username')
     password = login_data.get('password')
     try:
@@ -142,7 +155,8 @@ def login(request):
         return HttpResponse(message)
     if user.password != password:
         message = "Wrong password. Please try again. <a href=\"/\">Login</a>"
-        # return render_to_response("/signin", RequestContext(request, context))
+        # return render_to_response("/signin", RequestContext(request,
+        # context))
         return HttpResponse(message)
     else:
         request.session['username'] = username
@@ -156,7 +170,8 @@ def login(request):
     }
     # get nearby restaurants if latitude and longitude are not null
     if 'latitude' in login_data and 'longitude' in login_data:
-        context["nearby_restaurants"] = get_nearby_restaurants(login_data.get('latitude'), login_data.get('longitude'))
+        context["nearby_restaurants"] = get_nearby_restaurants(
+            login_data.get('latitude'), login_data.get('longitude'))
     # set the entire session object
     request.session['context'] = context
     # test_query(request)
@@ -248,13 +263,15 @@ def send_msg(intro_msg, client_number):
     client = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
     # Information corresponds to the phone number associated with the account that is used to send sms etc.
-    # Then a message is created which is routed to the client_number through twilio number of the account.
-    
+    # Then a message is created which is routed to the client_number through
+    # twilio number of the account.
+
     client.messages.create(
         body=intro_msg,
         to=client_number,
         from_="+16788203937",
     )
+
 
 def home(request):
     # check if user is logged in
@@ -265,9 +282,10 @@ def home(request):
         print "session already set"
         return render_to_response("home.html", RequestContext(request, request.session['context']))
 
+
 @csrf_exempt
 def logout(request):
-    print "Logging out ...."+ request.session['username']
+    print "Logging out ...." + request.session['username']
     try:
         del request.session['username']
         del request.session['context']
@@ -283,6 +301,7 @@ def logout(request):
 def search_clicked(request):
     print "Inside search_clicked"
     search_data = request.POST
+<<<<<<< HEAD
     print "latitude: " + str(search_data.get('latitude'))
     print "longitue: " + str(search_data.get('longitude'))
     if 'context' in request.session:
@@ -290,13 +309,20 @@ def search_clicked(request):
     else:
         context = {}
 
+=======
+    context = {}
+>>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
     if 'latitude' in search_data and 'longitude' in search_data:
-        context["nearby_restaurants"] = get_nearby_restaurants(search_data.get('latitude'), search_data.get('longitude'))
+        context["nearby_restaurants"] = get_nearby_restaurants(
+            search_data.get('latitude'), search_data.get('longitude'))
     # set the session object
     request.session['context'] = context
     return HttpResponseRedirect('/login')
 
-# gets the restaurant id and sets the context dictionary which is used in checkin.html
+# gets the restaurant id and sets the context dictionary which is used in
+# checkin.html
+
+@csrf_exempt
 def checkin(request):
     if 'username' not in request.session:
         return HttpResponseRedirect('/')
@@ -311,26 +337,22 @@ def checkin(request):
     reviews = Review.objects.filter(restaurant_id=restaurant_id)
     i = 1
     for review in reviews:
-        context['review'+str(i)] = review
+        context['review' + str(i)] = review
         i += 1
-    print "Checkin context:"
-    print context
     return render_to_response("checkin.html", RequestContext(request, context))
 
-def get_choices(question_id):
-    pass
-
+@csrf_exempt
 @require_POST
 def survey(request):
     checkin_data = request.POST
     restaurant_id = checkin_data.get('survey_restaurant_id')
     # save the qr code file using the current timestamp as the filename
-    filename = 'database_images/'+ time.time()
+    filename = settings.BASE_DIR + 'app/database_images/' + str(time.time())
     save_uploaded_file(request.FILES['qrcode_image'], filename)
+    # save_uploaded_file(checkin_data['qrcode_image'], filename)
     # decode the file
     qr = qrtools.QR()
     qr.decode(filename)
-    print qr.data
 
     # parse the decoded qr code string into a data structure
     bd = BillData(qr.data)
@@ -338,43 +360,73 @@ def survey(request):
     cursor = connection.cursor()
 
     # get restaurant_id from restaurant name
-    cursor.execute('select id from restaurant where name=%s',(bd.restaurant_name))
+    cursor.execute(
+        'select id from Restaurant where name=\''+bd.restaurant_name+'\'')
     row = cursor.fetchone()
     if row is not None:
         restaurant_id = row[0]
     else:
-        raise 'Restaurant id not found'
-    cursor.execute('insert into Bill(id, restaurant_id, amount, time) values(%s, %s, %s, %d)',(bd.bill_id, restaurant_id, bd.total, bd.time))
+        return HttpResponse('Oops sorry. Restaurant was not found. Try later')
+    try:
+        query = 'insert into Bill(id, restaurant_id, amount, time) values('+bd.bill_id+',\''+restaurant_id+'\','+ bd.total+','+bd.time+');'
+        cursor.execute(query)
+    except:
+        return HttpResponse('Something wrong with the bill. use the correct QR Code')
     for i in range(len(bd.item_name)):
-        cursor.execute('insert into Has_Bill(item_name, restaurant_id, bill_id, quantity) values(%s, %s, %s)', (bd.item_name[i], bd.restaurant_id, bd.bill_id, bd.quantity))
+        try:
+            query = 'insert into Has_Bill(item_name, restaurant_id, bill_id, quantity) values(\''+bd.item_name[i]+'\',\''+restaurant_id+'\','+ bd.bill_id+','+bd.item_quantity[i]+');'
+            cursor.execute(query)
+        except:
+            return HttpResponse('Something wrong with the bill. use the correct QR Code')
 
     # call generate survey
-    return HttpResponse('Success')
+    request.session['bill_id'] = bd.bill_id
+    request.session['restaurant_id'] = restaurant_id
+    return HttpResponseRedirect('/generate_survey')
 
 
 def save_uploaded_file(f, filename):
-    destination = open(filename, 'wb+')
-    for chunk in f.chunks():
-        destination.write(chunk)
-    destination.close()
+    dir = os.path.dirname(filename)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    # destination = open(filename, 'wb+')
+    with open(filename, 'a') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+        destination.close()
 
+
+<<<<<<< HEAD
+=======
+def generate_survey(request):
+    survey_data = request.POST
+    survey_id = survey_data.get('survey_id')
+    # check if survey id already exists in response
+    cursor = connection.cursor()
+    cursor.execute('select * from Response where survey_id = %s', (survey_id))
+    # if cursor.rowcount == 0: # send standard 4 questions
+
+    # else: # check the lowest ratings he gave and ask questions about that
+
+
+>>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
 # class which parses the qrcode string and sets the bill data
 class BillData:
+
     def __init__(self, qrcode_text):
-        self.item_name=[]
-        self.item_quantity=[]
-        self.item_price=[]
+        self.item_name = []
+        self.item_quantity = []
+        self.item_price = []
         for line in qrcode_text.splitlines():
-            key_value=line.split(':', 2)
+            key_value = line.split(':', 2)
             if len(key_value) >= 2:
                 if key_value[0] == 'restaurant_name':
-                    self.restaurant_name=key_value[1].strip()
+                    self.restaurant_name = key_value[1].strip()
                 elif key_value[0] == 'bill_id':
-                    self.bill_id=key_value[1].strip()
+                    self.bill_id = key_value[1].strip()
                 elif key_value[0].startswith('item') is True:
                     for item_detail in line.split(';'):
-                        detail=item_detail.split(':')
-                        print detail[0].strip()
+                        detail = item_detail.split(':')
                         if detail[0].strip().startswith('item'):
                             self.item_name.append(detail[1].strip())
                         elif detail[0].strip() == 'quantity':
@@ -382,27 +434,27 @@ class BillData:
                         elif detail[0].strip() == 'price':
                             self.item_price.append(detail[1].strip())
                 elif key_value[0] == 'total':
-                    self.total=key_value[1].strip()
+                    self.total = key_value[1].strip()
                 elif key_value[0] == 'time':
-                    self.time=key_value[1].strip()
+                    self.time = key_value[1].strip()
 
     def printObj(self):
         print "Restaurant Name:" + self.restaurant_name
         print "Bill ID: " + self.bill_id
         print "Total: " + self.total
         for i in range(len(self.item_name)):
-            print "item_name: "+ self.item_name[i] + " quantity: " + self.item_quantity[i] + " price:" + self.item_price[i]
+            print "item_name: " + self.item_name[i] + " quantity: " + self.item_quantity[i] + " price:" + self.item_price[i]
         return
 
 def get_reviews(request):
     response_object={"review":"good"}
     print "IN get_reviews"
     restaurant_id = request.GET.get("id")
-    #restaurant_id = 'mVHrayjG3uZ_RLHkLj-AMg'
+    # restaurant_id = 'mVHrayjG3uZ_RLHkLj-AMg'
     cursor = connection.cursor()
     cursor.execute('select text from Review where restaurant_id=\''+restaurant_id + '\'')
-    #print "REVIEWS FOR CURRENT RESTAURANT" + cursor.fetchall()
-    #return JsonResponse(response_object)
+    # print "REVIEWS FOR CURRENT RESTAURANT" + cursor.fetchall()
+    # return JsonResponse(response_object)
     results = cursor.fetchall()
     response_object = {}
     i = 1
@@ -415,6 +467,7 @@ def generate_qr_code(filename, text):
     filename = "database_images/qr_code/bill1.png"
     text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
     qr = pyqrcode.create(text)
+<<<<<<< HEAD
     qr.png(filename, scale=6)
 
 def generate_survey(request):
@@ -602,3 +655,6 @@ def delete_coupon(request):
     print "Context object after setting coupons"
     print context
     return HttpResponseRedirect('/home')
+=======
+    qr.png(filename, scale=6)
+>>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
