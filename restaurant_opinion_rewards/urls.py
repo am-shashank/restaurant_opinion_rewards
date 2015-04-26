@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^display', display),
     url(r'^delete_coupon', delete_coupon),
     url(r'^generate_survey', generate_survey),
+    url(r'^generate_coupon', generate_coupon),
     url(r'^', login),
 
 ]

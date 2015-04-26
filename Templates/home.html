@@ -89,7 +89,6 @@
 		 <div class="column">
  		 	<div class="ui grid">		    
 		    	<div class="three column row">
-			    	<div class="column"></div>
 			    	<div class="column" align="right">
 			    		<div id="logout" class="ui red button">Logout</div>
 			    	</div>
@@ -104,11 +103,65 @@
 					   	 	</div>
 				   	 	</div>
 		   	 	    </div>
+		   	 	    <div class="column">
+				   	 	<div class="ui red button" onclick="showDiv()">
+				   	 		Redeem
+				   	 	</div>
+				   	</div>
 		   		</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+
+<div class="column" style="visibility:hidden" id="id1_redeem_column">
+        <div align="center">
+        <div class="label">
+        Enter Points 
+        </div>
+        </div>
+</div>
+<div class="ui grid">
+<div class="two column row" style="visibility:hidden" id="id2_redeem_column">
+<div class="column">
+	<div align="right">
+          <div class="ui icon input">
+              <input type="text" placeholder="Redeem Points" name="Redeem_Points_Input" id="id_redeem_points">
+		</div>
+	</div>
+</div>
+<div class="column">
+	<div align="left">
+		<br>
+        <div class="ui red button" onclick="generate_coupon()">
+        	Generate Coupon
+        </div>
+	</div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript">
+	function showDiv() 
+	{
+		alert("here");
+   		document.getElementById('id1_redeem_column').style.visibility = "visible";
+   		document.getElementById('id2_redeem_column').style.visibility = "visible";
+	}	
+</script>
+
+<script type="text/javascript">
+	function generate_coupon()
+	{
+		var $points = $('#id_redeem_points').val();
+		var data = {
+			'points': $points
+		};
+		post('/generate_coupon', data, 'POST');
+	}
+
+</script>
 
 <div class="ui grid">
 	<div class="row"> 
@@ -120,7 +173,7 @@
                     
                     {% for key, value in coupons.items %}
                         <div class="item">
-                        <a href={{ value.query_string }} target="_blank" coupon_id={{ value.id }} id="coupon_click" onclick="delete_coupon">
+                        <a href={{ value.image_path }} target="_blank" coupon_id={{ value.id }} id="coupon_click" onclick="delete_coupon">
                             <img src={{ value.image_path }} class="ui top aligned avatar image">
                             <div class="content">
                               <div class="header">{{ value.restaurant_name }}</div>
@@ -185,17 +238,8 @@
         var data = {
               'coupon_id': $couponID,
            };
-        $.ajax({
-            type: "POST",
-            url: "/delete_coupon",
-            data: data,
-            success: function(){
 
-            },
-            error: function(error) {
-                alert(error); 
-            } 
-        });
+        $.post('/delete_coupon', data, 'POST')
 
     });
 

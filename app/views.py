@@ -14,7 +14,8 @@ from django.db import transaction
 from django.conf import settings
 import time
 import os
-import qrtools
+#import qrtools
+from random import randint
 import pyqrcode
 from django.http import JsonResponse
 
@@ -167,20 +168,28 @@ def login(request):
     # fetch all the coupons associated with the current user
     coupons = {}
     i = 1
-    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+    cursor = connection.cursor()
+    cursor.execute("select Coupons.id, Coupons.restaurant_id, Restaurant.name, Coupons.deal, Coupons.image_path from Coupons, Restaurant where user_id = '"+request.session['username']+"' and Restaurant.id = Coupons.restaurant_id;")
+    
+    results = cursor.fetchall()
+
+    for coupon in results:
+
         coupons[str(i)] = {}
         # check for expires or filter them using query
         d = {}
-        d['id'] = coupon.id
+        d['id'] = coupon[0]
         # coupon.restaurant_id is actually restuarant object
-        d['restaurant_id'] = coupon.restaurant_id.id
+        if coupon[1] is not None:
+            d['restaurant_id'] = coupon[1]
         try:
-            d['restaurant_name'] = coupon.restaurant_id.name
+            if coupon[1] is not None:
+                d['restaurant_name'] = coupon[2]
         except Restaurant.DoesNotExist:
             message = "restaurant does not exist"
             return HttpResponse(message)
-        d['deal'] = coupon.deal
-        d['image_path'] = coupon.image_path
+        d['deal'] = coupon[3]
+        d['image_path'] = coupon[4]
         coupons[str(i)] = d
         i += 1
 
@@ -432,9 +441,58 @@ def get_reviews(request):
         i = i + 1
     return JsonResponse(response_object)
 
+
+@csrf_exempt
+@require_POST
+def generate_coupon(request):
+    if 'username' not in request.session:
+        return HttpResponseRedirect('/')
+    coupon_data = request.POST
+    points = int(coupon_data.get('points'))
+    user_id = request.session['username']
+    deal = 'Get discount for '+str(points)+' points in any restaurant'
+    image_path = '/static/images/user_coupons/coupon'+str(randint(1,1000))+'.jpeg'
+    generate_qr_code_coupon('./app'+image_path, str(points))
+    context = request.session['context']
+    if int(context['credit'])<points:
+        return HttpResponseRedirect("/")
+    cursor = connection.cursor()
+    credit = int(context['credit']) - points
+
+    try:
+        cursor.execute('insert into Coupons(user_id, deal, image_path) values(%s, %s, %s)', (user_id, deal, image_path))
+        cursor.execute("update User set credit='"+str(credit)+"' where id='"+request.session['username']+"';")
+        cursor.execute("select * from Coupons where user_id = '"+request.session['username']+"' and image_path = '"+image_path+"';")
+    except:
+        return HttpResponse("Failed to generate coupon")
+
+    if 'coupons' not in context:
+        coupons = {}
+    else:
+        coupons = context['coupons']
+    results = cursor.fetchall()
+    d= {}
+    for row in results:
+        d['id'] = row[0]
+        d['restaurant_id'] =row[2]
+        d['deal'] = row[3]
+        d['image_path'] = row[5]
+    
+    coupons[str(len(coupons)+1)] = d
+    context['credit'] = str(credit)
+    context['coupons'] = coupons
+    request.session['context'] = context
+    return HttpResponseRedirect("/home")
+
+
+
 def generate_qr_code(filename, text):
     filename = "database_images/qr_code/bill1.png"
     text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
+    qr = pyqrcode.create(text)
+    qr.png(filename, scale=6)
+
+def generate_qr_code_coupon(filename, text):
     qr = pyqrcode.create(text)
     qr.png(filename, scale=6)
 
@@ -599,22 +657,28 @@ def delete_coupon(request):
 
     coupons = {}
     i = 1
-    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+    cursor = connection.cursor()
+    cursor.execute("select Coupons.id, Coupons.restaurant_id, Restaurant.name, Coupons.deal, Coupons.image_path from Coupons, Restaurant where user_id = '"+request.session['username']+"' and Restaurant.id = Coupons.restaurant_id;")
+    
+    results = cursor.fetchall()
+
+    for coupon in results:
+
         coupons[str(i)] = {}
         # check for expires or filter them using query
         d = {}
-        d['id'] = coupon.id
-        d['query_string'] = "static/images/coupons/coupon"+str(coupon.id)+".jpeg"
-        print d['query_string']
+        d['id'] = coupon[0]
         # coupon.restaurant_id is actually restuarant object
-        d['restaurant_id'] = coupon.restaurant_id.id
+        if coupon[1] is not None:
+            d['restaurant_id'] = coupon[1]
         try:
-            d['restaurant_name'] = coupon.restaurant_id.name
+            if coupon[1] is not None:
+                d['restaurant_name'] = coupon[2]
         except Restaurant.DoesNotExist:
             message = "restaurant does not exist"
             return HttpResponse(message)
-        d['deal'] = coupon.deal
-        d['image_path'] = coupon.image_path
+        d['deal'] = coupon[3]
+        d['image_path'] = coupon[4]
         coupons[str(i)] = d
         i += 1
 

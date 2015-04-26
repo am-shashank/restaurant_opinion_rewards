@@ -72,6 +72,34 @@
 </div>
 </div>
 
+<script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : 'your-app-id',
+          xfbml      : true,
+          version    : 'v2.3'
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "//connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+    </script>
+
+    <div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.3";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
 <script type="text/javascript">
   function insert()
   {
@@ -162,16 +190,17 @@
             <div class="hidden content"> <font color="black">Run Search </font></div>
           </div>
           </div>
-          <div class="column"></div>
+          <div class="column">
+            <br>
+            <div class="fb-like" data-href="https://www.facebook.com/pages/Nitin-wait-for-it-Sanket/588204974540291?fref=ts" data-layout="standard" data-action="like" data-show-faces="true" data-share="true"></div>
+
+          </div>
           <div class="column"></div>
         </div>
         </div>
       </div>
       </div>
     </div>
-
-
-
 
 <!--Restaurant Card
     
