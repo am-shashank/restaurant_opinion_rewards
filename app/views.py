@@ -16,6 +16,7 @@ import time
 import os
 import qrtools
 import pyqrcode
+from django.http import JsonResponse
 
 cursor = connection.cursor()
 
@@ -414,6 +415,22 @@ class BillData:
             print "item_name: " + self.item_name[i] + " quantity: " + self.item_quantity[i] + " price:" + self.item_price[i]
         return
 
+def get_reviews(request):
+    response_object={"review":"good"}
+    print "IN get_reviews"
+    restaurant_id = request.GET.get("id")
+    # restaurant_id = 'mVHrayjG3uZ_RLHkLj-AMg'
+    cursor = connection.cursor()
+    cursor.execute('select text from Review where restaurant_id=\''+restaurant_id + '\'')
+    # print "REVIEWS FOR CURRENT RESTAURANT" + cursor.fetchall()
+    # return JsonResponse(response_object)
+    results = cursor.fetchall()
+    response_object = {}
+    i = 1
+    for row in results:
+        response_object['review_' + str(i)] = row[0]
+        i = i + 1
+    return JsonResponse(response_object)
 
 def generate_qr_code(filename, text):
     filename = "database_images/qr_code/bill1.png"
