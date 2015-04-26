@@ -1,0 +1,74 @@
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script src="/static/js/post.js"></script>
+    </head>
+    <body>
+            <label id="restaurant_name">Sitar India</label>
+            <label> Bill ID </label>
+            <input type="text" id="bill_id"></input>
+            <br/><br/>
+            <div id="itemset1">
+                <label>Items</label>
+                <select id="item1">
+                    {% for key, value in food_items.items %}
+                        <option>{{ value }}</option>
+                    {% endfor %}
+                </select>
+                <br/><br/>
+                <label> Quantity </label>
+                <input type="text" id="quantity1"></input>
+                <br/><br/>
+                <label> Price </label>
+                <input type="text" id="price1"></input>
+                <br/><br/>
+            </div>
+            <div id="itemset2">
+                <label>Items</label>
+                <select id="item2">
+                    {% for key, value in food_items.items %}
+                        <option>{{ value }}</option>
+                    {% endfor %}
+                </select>
+                <br/><br/>
+                <label> Quantity </label>
+                <input type="text" id="quantity2"></input>
+                <br/><br/>
+                <label> Price </label>
+                <input type="text" id="price2"></input>
+                <br/><br/>
+            </div>
+            <label> Total </label>
+            <input type="text" name="total"></input>
+            <br/><br/>
+            <input type="button" id="generate_button" value="Generate QR Code"></input>
+        
+        <script type="text/javascript">
+            $('#generate_button').click(function() {
+                var bill_id = $('#bill_id').val();
+                var restaurant_name = $('#restaurant_name').text();
+                var item1 = $('#item1 option:selected').text();
+                var quantity1 = $('#quantity1').val();
+                var price1 = $('#price1').val();
+                var item2 = $('#item2 option:selected').text();
+                var quantity2 = $('#quantity2').val();
+                var price2 = $('#price2').val();
+                var total = $('#total').val();
+                var data = {
+                    'bill_id' : bill_id,
+                    'restaurant_name' : restaurant_name,
+                    'item1' : item1,
+                    'item2' : item2,
+                    'quantity2' : quantity2,
+                    'quantity1' : quantity1,
+                    'price2' : price2,
+                    'price1' : price1,
+                    'total' : total
+                };
+                post('/business/generate_bill',data, 'POST');
+
+            });
+        </script>
+    </body>
+
+</html>

@@ -10,7 +10,6 @@ from app.models import *
 import collections
 import json
 from django.db import connection
-from django.db import transaction
 from django.conf import settings
 import time
 import os
