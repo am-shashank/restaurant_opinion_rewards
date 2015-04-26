@@ -60,13 +60,6 @@ def signup(request):
     # facebook_id = signup_data.get('facebook_id')
     telephone = signup_data.get('phone')
     message = ""
-<<<<<<< HEAD
-=======
-    for user in users:
-        if user.id == id:
-            message = "Account already exists. Please login here. <a href=" // ">Login</a>"
-            return HttpResponse(message)
->>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
 
     credit = 0
     print "It's a new account"
@@ -97,12 +90,7 @@ def get_nearby_restaurants(latitude, longitude):
     startlat = float(latitude)
     startlng = float(longitude)
     cursor = connection.cursor()
-<<<<<<< HEAD
     cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, image_path, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
-=======
-    cursor.execute(
-        'SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48', (startlat, startlng))
->>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
     results = cursor.fetchall()
     # 4 indicates number of columns in the grid on home.html
     total_required_results = len(results) - len(results) % 4
@@ -301,7 +289,6 @@ def logout(request):
 def search_clicked(request):
     print "Inside search_clicked"
     search_data = request.POST
-<<<<<<< HEAD
     print "latitude: " + str(search_data.get('latitude'))
     print "longitue: " + str(search_data.get('longitude'))
     if 'context' in request.session:
@@ -309,9 +296,6 @@ def search_clicked(request):
     else:
         context = {}
 
-=======
-    context = {}
->>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
     if 'latitude' in search_data and 'longitude' in search_data:
         context["nearby_restaurants"] = get_nearby_restaurants(
             search_data.get('latitude'), search_data.get('longitude'))
@@ -395,21 +379,6 @@ def save_uploaded_file(f, filename):
             destination.write(chunk)
         destination.close()
 
-
-<<<<<<< HEAD
-=======
-def generate_survey(request):
-    survey_data = request.POST
-    survey_id = survey_data.get('survey_id')
-    # check if survey id already exists in response
-    cursor = connection.cursor()
-    cursor.execute('select * from Response where survey_id = %s', (survey_id))
-    # if cursor.rowcount == 0: # send standard 4 questions
-
-    # else: # check the lowest ratings he gave and ask questions about that
-
-
->>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
 # class which parses the qrcode string and sets the bill data
 class BillData:
 
@@ -467,7 +436,6 @@ def generate_qr_code(filename, text):
     filename = "database_images/qr_code/bill1.png"
     text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
     qr = pyqrcode.create(text)
-<<<<<<< HEAD
     qr.png(filename, scale=6)
 
 def generate_survey(request):
@@ -482,7 +450,7 @@ def generate_survey(request):
         
         
         #Insert entry into Survey and saving the survey id in session
-        cursor.execute("Insert into Survey(id,user_id) values(%s, %s)",(survey_id,user_id))
+        cursor.execute("Insert into Survey(user_id) values(%s)",(user_id))
         survey_id = cursor.lastrowid
         request.session['survey_id'] = survey_id
 
@@ -655,6 +623,3 @@ def delete_coupon(request):
     print "Context object after setting coupons"
     print context
     return HttpResponseRedirect('/home')
-=======
-    qr.png(filename, scale=6)
->>>>>>> 134920e2aa2063b2c40d9987dd39b72f71a994bf
