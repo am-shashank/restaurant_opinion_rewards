@@ -37,7 +37,7 @@
   <div class="four column row">
     <div class="column">
     <div align="center">
-      <h1 class="ui header">DHONDU BACHHA </h1>
+      <h1 class="ui header">Restaurant Opinion Rewards</h1>
     </div>
     </div>
     <!--<form action="/login_user" method="POST">-->
@@ -104,7 +104,7 @@
   function insert()
   {
     var data = new Object();
-    post('/generate_bill',data, 'POST');
+    post('/insert',data, 'POST');
   }
 
 </script>
@@ -171,8 +171,6 @@
       
        <div class="ui transition information visible">
           <h1 class="ui inverted header">
-           <font color="black"> Dhondu Betaaa Just Chill !!!!!</font>
-
           <p><font color="black">Browse through thousands of restaurants nearby and zoom in, on the best place to eat.</font></p>
           </h1>
           <div class="ui grid">
@@ -244,7 +242,7 @@
                         </div>
                      </div>
                   </div>
-                   <img src="/static/images/wireframe/image.png">
+                   <img src={{ value1.image_path }}>
               </div>
 
               <div class="content">
