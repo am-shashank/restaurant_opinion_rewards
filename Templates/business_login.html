@@ -44,7 +44,10 @@
     window.onload = function()
     {
         var data = {
+<<<<<<< HEAD
             restaurant_id = 'testID'
+=======
+>>>>>>> 3aa0c4578aa1fec6cbc225a350abbf6d39ef99d3
         };
         $.ajax({
             type: "POST",
@@ -64,6 +67,28 @@
     }
 </script>
 
+<<<<<<< HEAD
+=======
+<script type="text/javascript">
+    window.onload = function()
+    {
+        var data = {
+        };
+        $.ajax({
+            type: "POST",
+            url: "/business/get_no_checkins",
+            data: data,
+            success: function(no_checkins){
+                $('#no_checkins').html(no_checkins['count'])
+            },
+            error: function(error) {
+              //$modal.open({content: "Message delivery failed.", height: $ht, width: $wt});
+            } 
+          });
+    }
+</script>
+
+>>>>>>> 3aa0c4578aa1fec6cbc225a350abbf6d39ef99d3
 
 
     <div id="wrapper">
@@ -416,7 +441,7 @@
                                     <i class="fa fa-comments fa-5x"></i>
                                 </div>
                                 <div class="col-xs-9 text-right">
-                                    <div class="huge">26</div>
+                                    <div class="huge" id="no_checkins"></div>
                                     <div>New Checkins!</div>
                                 </div>
                             </div>
