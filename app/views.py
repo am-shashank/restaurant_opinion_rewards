@@ -13,14 +13,11 @@ from django.db import connection
 from django.conf import settings
 import time
 import os
-<<<<<<< HEAD
-#import qrtools
-#import pyqrcode
-=======
+
 import qrtools
 from random import randint
 import pyqrcode
->>>>>>> 5b4617006eb7a430bc91420d4569d13809742a9f
+
 from django.http import JsonResponse
 
 cursor = connection.cursor()
@@ -393,9 +390,6 @@ def survey(request):
     # call generate survey
     request.session['bill_id'] = bd.bill_id
     request.session['restaurant_id'] = restaurant_id
-<<<<<<< HEAD
-    return render_to_response('survey.html')
-=======
     bill_id = bd.bill_id
     user_id = request.session['username']
 
@@ -436,7 +430,6 @@ def survey(request):
         "credit": user.credit
     }
     return render_to_response('survey.html', RequestContext(request, request.session['context']))
->>>>>>> 5b4617006eb7a430bc91420d4569d13809742a9f
 
 
 def save_uploaded_file(f, filename):
@@ -502,12 +495,6 @@ def get_reviews(request):
         response_object['review_' + str(i)] = row[0]
         i = i + 1
     return JsonResponse(response_object)
-<<<<<<< HEAD
-"""
-def generate_qr_code(filename, text):
-    filename = "database_images/qr_code/bill1.png"
-    text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
-=======
 
 
 @csrf_exempt
@@ -554,22 +541,8 @@ def generate_coupon(request):
 
 
 def generate_qr_code_coupon(filename, text):
->>>>>>> 5b4617006eb7a430bc91420d4569d13809742a9f
     qr = pyqrcode.create(text)
     qr.png(filename, scale=6)
-"""
-@csrf_exempt
-def process_survey(request):
-    users_response = request.POST
-    print users_response['question_1']
-    # print "RESPONSE"
-    # print users_response
-
-
-
-
-
-
 
 
 @csrf_exempt
