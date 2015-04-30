@@ -34,7 +34,7 @@ urlpatterns = [
     url(r'^business/generate_bill', generate_bill),
     url(r'^business/get_overall_averages', get_overall_averages),
     url(r'^business/get_favourite_items', get_favourite_items),
-
+    url(r'^business/user_likings',user_likings),
     # default
     url(r'^', login),
 ]

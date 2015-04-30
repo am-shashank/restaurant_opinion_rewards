@@ -89,7 +89,41 @@ def get_favourite_items(request):
     print favourite_items
     return JsonResponse(favourite_items)
 
+def user_likings(request):
+    restaurant_id = "testID"
+    print "Inside User likings"
+    cursor = connection.cursor()
+    query = "select concat(10*floor(age/10), '-', 10*floor(age/10) + 10) as `ranges`, count(*) as count\
+            from (select ROUND(DATEDIFF(curdate(),dob ) / 365.25) as age\
+            from User where id in (select distinct user_id from Survey s, Checkin c where s.id = c.survey_id\
+            and c.restaurant_id = \"" + restaurant_id + "\"))as t group by `ranges`\
+            ORDER   BY `count` DESC LIMIT 1;"
+    #print query
+    cursor.execute(query)
+    row = cursor.fetchone()
+    values = str(row[0]).split("-")
+    print values[0],values[1]
+    start_age = values[0]
+    end_age = values[1]
 
+    query = "select u.id,c.bill_id \
+            from User u, Checkin c, Survey s where u.id = s.user_id and s.id = c.survey_id\
+            and s.restaurant_id = \"" + restaurant_id + "\" and ROUND(DATEDIFF(curdate(),u.dob ) / 365.25) between " +  start_age + " and " + end_age + ";"
+    print query
+    cursor.execute(query)
+    bill_ids = "("
+    for row in cursor.fetchall():
+        print row[0],row[1]
+        bill_ids+= str(row[1]) + ","
+        items_in_bill = ""
+    bill_ids = bill_ids[:-1]
+    bill_ids+= ")"
+    print bill_ids
 
-
-
+    query = "select item_name, count(*) as count from Has_Bill \
+    where bill_id in" + bill_ids + "group by item_name order by count desc limit 1;"
+    print query
+    cursor.execute(query)
+    row = cursor.fetchone()
+    print row[0]
+    return HttpResponse("")

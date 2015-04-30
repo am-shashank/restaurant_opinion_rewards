@@ -578,6 +578,7 @@ def generate_survey(request):
     if 'username' not in request.session:
         print "session not set"
         return HttpResponseRedirect('/')
+    print "In generate survey"
     survey_id = request.session['survey_id']
     bill_id = request.session['bill_id']
     restaurant_id = request.session['restaurant_id']
@@ -709,9 +710,8 @@ def get_final_questions(bill_id,restaurant_id,category,user_id,request):
     cursor1 = connection.cursor()
 
     query = 'select * from Question q where q.category = \'' + category +'\'and q.id not in \
-            (select question_id from Response r,Survey s where r.survey_id = s.id \
-            and s.user_id = \''+ str(user_id) + '\'and s.restaurant_id = \'\
-            '+ str(restaurant_id) + '\')'
+            (select question_id from Response r,Survey s where r.survey_id = s.id\
+            and s.user_id = \''+ str(user_id) + '\'and s.restaurant_id = \''+ str(restaurant_id) + '\')'
     print query
     cursor.execute(query)
 
@@ -730,6 +730,7 @@ def get_final_questions(bill_id,restaurant_id,category,user_id,request):
     cnt = 0
 
     for row in cursor.fetchall():
+        print row[0],row[1]
         #Fetch two questions from the list and then break
         if cnt == 2:
                 break
