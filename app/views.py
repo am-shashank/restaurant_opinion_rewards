@@ -14,8 +14,9 @@ from django.conf import settings
 import time
 import os
 import hashlib
+import redis
 
-import qrtools
+#import qrtools
 from random import randint
 import pyqrcode
 
@@ -484,19 +485,41 @@ class BillData:
 
 def get_reviews(request):
     response_object={"review":"good"}
-    print "IN get_reviews"
     restaurant_id = request.GET.get("id")
+    response_object = {}
     # restaurant_id = 'mVHrayjG3uZ_RLHkLj-AMg'
-    cursor = connection.cursor()
-    cursor.execute('select text from Review where restaurant_id=\''+restaurant_id + '\'')
+    r=redis.Redis(host='pub-redis-13102.us-east-1-4.1.ec2.garantiadata.com', port=13102,password='brogrammer')
+    reviews = 'empty'
+    reviews = r.lpop(restaurant_id)
+    print "rest id : "+restaurant_id
+    if reviews is None:
+        cursor = connection.cursor()
+        cursor.execute('select text from Review where restaurant_id=\''+restaurant_id + '\'')
     # print "REVIEWS FOR CURRENT RESTAURANT" + cursor.fetchall()
     # return JsonResponse(response_object)
-    results = cursor.fetchall()
-    response_object = {}
-    i = 1
-    for row in results:
-        response_object['review_' + str(i)] = row[0]
-        i = i + 1
+        results = cursor.fetchall()
+        i = 1
+        for row in results:
+            response_object['review_' + str(i)] = row[0]
+            print "In get_reviews: "+row[0]
+            r.lpush(restaurant_id, row[0])
+            i = i + 1
+    else:
+        print "Obtaining reviews from redis cache"
+        #print reviews[0]
+        collect_reviews = []
+        
+        while reviews is not None:
+            collect_reviews.append(reviews)
+            reviews = r.lpop(restaurant_id)
+                
+        i = 1
+        for review in collect_reviews:
+            #print "In cache : "+review
+            response_object['review_' + str(i)] = review
+            r.lpush(restaurant_id, review)
+            i = i+1
+        
     return JsonResponse(response_object)
 
 
@@ -553,6 +576,7 @@ def generate_survey(request):
     if 'username' not in request.session:
         print "session not set"
         return HttpResponseRedirect('/')
+    print "In generate survey"
     survey_id = request.session['survey_id']
     bill_id = request.session['bill_id']
     restaurant_id = request.session['restaurant_id']
@@ -684,9 +708,8 @@ def get_final_questions(bill_id,restaurant_id,category,user_id,request):
     cursor1 = connection.cursor()
 
     query = 'select * from Question q where q.category = \'' + category +'\'and q.id not in \
-            (select question_id from Response r,Survey s where r.survey_id = s.id \
-            and s.user_id = \''+ str(user_id) + '\'and s.restaurant_id = \'\
-            '+ str(restaurant_id) + '\')'
+            (select question_id from Response r,Survey s where r.survey_id = s.id\
+            and s.user_id = \''+ str(user_id) + '\'and s.restaurant_id = \''+ str(restaurant_id) + '\')'
     print query
     cursor.execute(query)
 
@@ -705,6 +728,7 @@ def get_final_questions(bill_id,restaurant_id,category,user_id,request):
     cnt = 0
 
     for row in cursor.fetchall():
+        print row[0],row[1]
         #Fetch two questions from the list and then break
         if cnt == 2:
                 break

@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^business/get_overall_averages', get_overall_averages),
     url(r'^business/get_favourite_items', get_favourite_items),
     url(r'^business/home', TemplateView.as_view(template_name="business_login.html")),
+    url(r'^business/user_likings',user_likings),
 
     # default
     url(r'^', login),
