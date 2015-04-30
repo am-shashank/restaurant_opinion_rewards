@@ -15,8 +15,7 @@ import time
 import os
 import hashlib
 import redis
-
-#import qrtools
+import qrtools
 from random import randint
 import pyqrcode
 
@@ -31,7 +30,6 @@ def current_datetime(request):
     now = datetime.datetime.now()
     html = "<html><body>It is now %s.</body></html>" % now
     return HttpResponse(html)
-
 
 def get_table_list(request):
     results = User.objects.all()
@@ -651,6 +649,11 @@ def generate_survey(request):
             query = 'update User set credit = credit + 5 where id  = \'' + user_id + '\''
             print query
             cursor.execute(query)
+            query = 'select credit from User where id  = \'' + user_id + '\';'
+            cursor.execute(query)
+            context = request.session['context']
+            context['credit'] = cursor.fetchone()[0]
+            request.session['context'] = context
             return JsonResponse(questions)
 
 def get_questions(category,request):
