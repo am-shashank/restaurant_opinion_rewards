@@ -11,3 +11,4 @@ check if session exists in every function
 show reviews in checkin
 category could be made an index in question
 index on restaurant cos lookup by name in bill
+index on restaurant_id in Item cos lookup by restaurant_id
