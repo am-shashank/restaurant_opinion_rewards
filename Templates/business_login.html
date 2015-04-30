@@ -40,6 +40,32 @@
 
 <body>
 
+<script type="text/javascript">
+    window.onload = function()
+    {
+        var data = {
+            restaurant_id = 'testID'
+        };
+        $.ajax({
+            type: "POST",
+            url: "/business/get_overall_averages",
+            data: data,
+            success: function(averages){
+              //$modal.open({content: result, height: $ht, width: $wt});
+                $('#id_food_quality').html(averages['food quality'])
+                $('#id_ambience_rating').html(averages['ambience'])
+                $('#id_service_rating').html(averages['service'])
+                $('#id_overall_rating').html(averages['Overall Rating'])
+            },
+            error: function(error) {
+              //$modal.open({content: "Message delivery failed.", height: $ht, width: $wt});
+            } 
+          });
+    }
+</script>
+
+
+
     <div id="wrapper">
 
         <!-- Navigation -->
@@ -726,26 +752,26 @@
                             <i class="fa fa-bell fa-fw"></i> Ratings Panel
                         </div>
                         <!-- /.panel-heading -->
-                        <div class="panel-body">
+                        <div class="panel-body" >
                             <div class="list-group">
                                 <a href="#" class="list-group-item">
                                     <i class="fa fa-comment fa-fw"></i> Average Food Quality
-                                    <span class="pull-right text-muted small"><em>8.8</em>
+                                    <span class="pull-right text-muted small" id="id_food_quality">
                                     </span>
                                 </a>
                                 <a href="#" class="list-group-item">
                                     <i class="fa fa-twitter fa-fw"></i> Average Ambience Rating
-                                    <span class="pull-right text-muted small"><em>7</em>
+                                    <span class="pull-right text-muted small" id="id_ambience_rating">
                                     </span>
                                 </a>
                                 <a href="#" class="list-group-item">
                                     <i class="fa fa-envelope fa-fw"></i> Average Service Rating
-                                    <span class="pull-right text-muted small"><em>5.6</em>
+                                    <span class="pull-right text-muted small" id="id_service_rating">
                                     </span>
                                 </a>
                                 <a href="#" class="list-group-item">
                                     <i class="fa fa-tasks fa-fw"></i> Average Overall Rating
-                                    <span class="pull-right text-muted small"><em>6.8</em>
+                                    <span class="pull-right text-muted small" id="id_overall_rating">
                                     </span>
                                 </a>
                             </div>

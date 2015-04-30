@@ -51,6 +51,8 @@ def create_bill_render(request):
 
     return render_to_response('generate_bill.html',  RequestContext(request, context))
 
+@csrf_exempt
+@require_POST
 def get_overall_averages(request):
     cursor = connection.cursor()
     averages = {'ambience':0, 'food quality':0, 'service':0, 'Overall Rating':0}
@@ -88,6 +90,15 @@ def get_favourite_items(request):
 
     print favourite_items
     return JsonResponse(favourite_items)
+
+@csrf_exempt
+@require_POST
+def get_new_referrals(request):
+    referrals = {}
+    cursor = connection.cursor()
+    cursor.execute("select count(*) from Coupons where referred_time > date_sub(now(), interval 10 day)")
+    row = fetchone()
+
 
 def user_likings(request):
     restaurant_id = "testID"
@@ -128,7 +139,7 @@ def user_likings(request):
     print row[0]
     return HttpResponse("")
 
-def home(request):
+def business_home(request):
     request.session['restaurant_id'] = 'testID'
     restaurant_id = request.session['restaurant_id']
 

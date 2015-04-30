@@ -358,6 +358,86 @@ $(document).ready(function(){
       </form>
        </div>   
     
+    <div align="center">
+      <div class="column">
+            <div class="ui red button" onclick="showDiv()">
+                Generate Event
+            </div>
+      </div>
+    </div>
+
+
+<div class="column" style="visibility:hidden" id="id1_generate_event">
+        <div align="center">
+        <div class="label">
+        <br>
+        Enter Phone Numbers of Friends ';' separated
+        </div>
+        </div>
+</div>
+<div class="ui grid">
+<div class="three column row" style="visibility:hidden" id="id2_generate_event">
+<div class="column">
+  <div align="right">
+          <div class="ui icon input">
+              <input type="text" placeholder="Enter Phone Numbers" name="Phone_Numbers" id="id_phone_numbers">
+    </div>
+  </div>
+</div>
+<div class="column">
+  <div align="right">
+          <div class="ui icon input">
+              <input type="text" placeholder="Enter Message" name="event_message" id="id_event_message">
+    </div>
+  </div>
+</div>
+<div class="column">
+  <div align="center">
+    <br>
+        <div class="ui red button" onclick="generate_event()">
+          Notify Event
+        </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript">
+  function showDiv() 
+  {
+      document.getElementById('id1_generate_event').style.visibility = "visible";
+      document.getElementById('id2_generate_event').style.visibility = "visible";
+  } 
+</script>
+
+<script type="text/javascript">
+  function generate_event()
+  {
+    var $ht = 0.25*$(window).height();
+    var $wt = 0.25*$(window).width();
+    var $phone_numbers = $('#id_phone_numbers').val();
+    var $event_message = $('#id_event_message').val();
+    var data = {
+      'phone_numbers': $phone_numbers
+      'event_message': $event_message
+    };
+    
+    $.ajax({
+            type: "POST",
+            url: "/generate_event",
+            data: data,
+            success: function(message){
+              $modal.open({content: message, height: $ht, width: $wt});
+              //alert(message);
+            },
+            error: function(error) {
+              $modal.open({content: "Please Try Again", height: $ht, width: $wt});
+            } 
+          });
+  }
+
+</script>
+
     </div>
     <div class="two wide column">
     </div>

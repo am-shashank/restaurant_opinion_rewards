@@ -224,7 +224,7 @@ def send_referral(request):
     cursor.execute('SELECT id from User where telephone=\'' + phone_number+'\'')
     # cursor.fetchone()
     for row in cursor.fetchall():
-        referee_id = row[0]
+        referee_id = row[0] 
     if cursor.rowcount == 0:
         print "friend not on resoprew"
         return HttpResponse("Your friend is not on Restaurant opinion Rewards. You can only refer to "
@@ -254,6 +254,40 @@ def send_referral(request):
         return HttpResponse(message)
     message = "Referral sent Successfully!"
     return HttpResponse(message)
+
+
+@csrf_exempt
+def generate_event(request):
+    event_data = request.POST
+    restaurant_id = ""
+    username = ""
+    phone_numbers = event_data.get('phone_numbers')
+    event_message = event_data.get('event_message')
+    if 'restaurant_id' in request.session:
+        restaurant_id = request.session['restaurant_id']
+        username = request.session['username']
+    else:
+        return HttpResponse("Failed to generate event")
+
+    cursor = connection.cursor()
+    cursor.execute('select name from Restaurant where id=\''+restaurant_id+'\'')
+    row = cursor.fetchone()
+    restaurant_name = row[0]
+    print restaurant_name
+    cursor.execute('select first_name from User where id=\''+username+'\'')
+    row = cursor.fetchone()
+    display_name = row[0]
+
+    print display_name
+
+    collect_phone_numbers = phone_numbers.split(";")
+    message = display_name+" has invited to his event at "+restaurant_name+"\nMessage : "+event_message
+    for phone_number in collect_phone_numbers:
+        print phone_number
+        send_msg(message, phone_number)
+
+    return HttpResponse("Event Update : Invited members successfully")
+    
 
 
 # send_msg function takes in message as string and phone_number as string
@@ -345,6 +379,7 @@ def checkin(request):
     for review in reviews:
         context['review' + str(i)] = review
         i += 1
+    request.session['restaurant_id'] = restaurant.id
     return render_to_response("checkin.html", RequestContext(request, context))
 
 @csrf_exempt

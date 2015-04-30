@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^insert', insert),
     url(r'^create_user', signup),
     url(r'^search', search_clicked),
+    url(r'^generate_event', generate_event),
     url(r'^home', home),
     url(r'^survey', survey),
     url(r'^refer',send_referral),
