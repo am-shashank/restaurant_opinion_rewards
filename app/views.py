@@ -281,7 +281,10 @@ def home(request):
 
 @csrf_exempt
 def logout(request):
-    print "Logging out ...." + request.session['username']
+    if 'username' in request.session:
+        print "Logging out ...." + request.session['username']
+    else:
+        print "Username not in session"
     try:
         del request.session['username']
         del request.session['context']
@@ -336,6 +339,9 @@ def checkin(request):
 @csrf_exempt
 @require_POST
 def survey(request):
+    if 'username' not in request.session:
+        print "session not set"
+        return HttpResponseRedirect('/')
     checkin_data = request.POST
     restaurant_id = checkin_data.get('survey_restaurant_id')
     # save the qr code file using the current timestamp as the filename
@@ -350,11 +356,12 @@ def survey(request):
     bd = BillData(qr.data)
 
     cursor = connection.cursor()
-
+    print bd
     # get restaurant_id from restaurant name
     cursor.execute(
         'select id from Restaurant where name=\''+bd.restaurant_name+'\'')
     row = cursor.fetchone()
+    print row[0]
     if row is not None:
         restaurant_id = row[0]
     else:
@@ -374,7 +381,46 @@ def survey(request):
     # call generate survey
     request.session['bill_id'] = bd.bill_id
     request.session['restaurant_id'] = restaurant_id
-    return HttpResponseRedirect('/generate_survey')
+    bill_id = bd.bill_id
+    user_id = request.session['username']
+
+    #Insert entry into Survey and saving the survey id in session
+    query = "Insert into Survey(user_id,restaurant_id) values('" + user_id + "','" + restaurant_id + "')"
+    print query
+    cursor.execute(query)
+    survey_id = cursor.lastrowid
+    request.session['survey_id'] = survey_id
+    
+    query = "Insert into Checkin(survey_id,bill_id,restaurant_id) values('" + str(survey_id) + "','" + str(bill_id) +  "',\
+            '" + str(restaurant_id)  +  "')"
+    #Insert entry into Checkin Table
+    try:
+        cursor.execute(query)
+    except:
+        return HttpResponse("Something went wrong while Checkin.")
+
+    question_ids = {}
+    question_ids['question_1'] = 1
+    question_ids['question_2'] = 2
+    question_ids['question_3'] = 3
+    question_ids['question_4'] = 4
+    request.session['question_ids'] = question_ids
+
+    question_option_ids = {}
+    for i in range(1,5):
+        question_option_ids['question_' + str(i)] = {}
+        for j in range(1,6):
+            question_option_ids['question_' + str(i)]['option_' + str(j)] = j
+
+    request.session['question_option_ids'] = question_option_ids
+
+    #Setting the context and sending it in response for displaying credit
+    user = User.objects.get(id=user_id)
+    context = {
+        "first_name": user.first_name,
+        "credit": user.credit
+    }
+    return render_to_response('survey.html', RequestContext(request, request.session['context']))
 
 
 def save_uploaded_file(f, filename):
@@ -484,156 +530,246 @@ def generate_coupon(request):
     return HttpResponseRedirect("/home")
 
 
-
-def generate_qr_code(filename, text):
-    filename = "database_images/qr_code/bill1.png"
-    text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
-    qr = pyqrcode.create(text)
-    qr.png(filename, scale=6)
-
 def generate_qr_code_coupon(filename, text):
     qr = pyqrcode.create(text)
     qr.png(filename, scale=6)
 
+@csrf_exempt
 def generate_survey(request):
-    user_id = request.session['username']
+    if 'username' not in request.session:
+        print "session not set"
+        return HttpResponseRedirect('/')
     survey_id = request.session['survey_id']
     bill_id = request.session['bill_id']
     restaurant_id = request.session['restaurant_id']
+    user_id = request.session['username']
     cursor = connection.cursor()
 
     # check if survey id already exists in response
     if survey_id is None:
-        
-        
-        #Insert entry into Survey and saving the survey id in session
-        cursor.execute("Insert into Survey(user_id) values(%s)",(user_id))
-        survey_id = cursor.lastrowid
-        request.session['survey_id'] = survey_id
-
-        #Insert entry into Checkin Table
-        cursor.execute("Insert into Checkin(survey_id,bill_id,restaurant_id) values(%s,%s,%s)",survey_id,bill_id,restaurant_id)
-        
         # send standard 4 questions
         context['questions'] = get_questions("general")
         return render_to_response("survey.html", RequestContext(request, context))
 
     else:
+        question_ids_session = request.session['question_ids']
+        question_option_ids_session = request.session['question_option_ids']
+        print "question_ids " 
+        print question_ids_session
+        print "question_option_ids "
+        print question_option_ids_session
         survey_data = request.POST
-        question_ids = survey_data.get('question_ids').split('#')
-        choice_ids = survey_data.get('choice_ids').split('#')
-        text = survey_data.get('text')
+        print survey_data
         question_choice_list = []
-        question_choice = ()
-        second_page = False
-        #Check if the response is for the first time or not.
-        if(question_ids[0] == 1):
-            second_page = True
+        for key in survey_data:
+            value = survey_data[key]    
+            question_choice = (question_ids_session[key],question_option_ids_session[key][value])
+            question_choice_list.append(question_choice)
 
+        print question_choice_list
+        #question_ids = survey_data.get('question_ids').split('#')
+        #choice_ids = survey_data.get('choice_ids').split('#')
+        
+        text = survey_data.get('text')
+        #second_page = False
+        #Check if the response is for the first time or not.
+        #if(question_ids[0] == 1):
+        #    second_page = True
+        second_page = False
         #Iterate over all the responses of the user and store it in response table
-        for i in range(len(question_ids)):
-            if(choice_ids[i]>0):
+        print str(len(question_choice_list))
+        for i in range(len(question_choice_list)):
+            if(question_choice_list[i][1]>0):
                 text = "null"
             else:
-                text = survey_data.get('text')                
-            question_choice = (question_ids[i],choice_ids[i])
-            question_choice_list.append(question_choice)
-            insert_into_response(choice_ids[i],question_ids[i],survey_id,text)
+                text = survey_data.get('text')
+            questionid = question_choice_list[i][0]
+            if(questionid<5):
+                second_page = True
+            choiceid = question_choice_list[i][1]             
+            insert_into_response(choiceid,questionid,survey_id,text)
         print "Data stored in Response table"
-
+        
         #Generate dyanamic Questions only if this is after the first page.        
         if(second_page):
             #Check the lowest ratings he gave and ask questions about that
-            question_choice_list.sort(key=lambda x: x[1])
-            if(question_choice_list[0][1] == 5):
+            question_choice_list.sort(key=lambda x: x[1],reverse = True)
+            if(question_choice_list[0][1] == 1):
                 #User is satisfied. So ask restaurant based questions.
-                context['questions'] = get_questions("restaurant")            
-                return render_to_response("survey.html", RequestContext(request, context))
+                questions = get_questions("restaurant",request)
+                print questions            
+                return JsonResponse(questions)
             else:
-                if(question_choice_list[0][1] < 5):
-                    cursor.execute('select category from Question where id = %s',(question_choice_list[0][0]))
+                    cursor.execute('select text from Question where id = ' + str(question_choice_list[0][0]))
                     row = cursor.fetchone()
-                    category = row[3]
-                    context['questions'] = get_final_questions(bill_id,restaurant_id,category,user_id)
-                    return render_to_response("survey.html", RequestContext(request, context))
+                    category = row[0]
+                    print category
+                    questions = get_final_questions(bill_id,restaurant_id,category,user_id,request)
+                    print questions
+                    return JsonResponse(questions)
+        else:
+            questions = {}
+            questions['is_survey'] = "False"
+            query = 'update User set credit = credit + 5 where id  = \'' + user_id + '\''
+            print query
+            cursor.execute(query)
+            return JsonResponse(questions)
 
-
-def get_questions(category):
+def get_questions(category,request):
     cursor = connection.cursor()
     cursor1 = connection.cursor()
     #Get the questions based on category
-    cursor.execute('select * from Question where category = %s',(category))
+    query = 'select * from Question where category = \'' + category + '\''
+    print query
+    cursor.execute(query)
+    request.session['question_ids'] = {}
+    request.session['question_option_ids'] = {}
+    question_ids_session = {}
+    question_option_ids_session = {}
+
     questions = {}
+    i=0
     for row in cursor.fetchall():
+        i+=1
         question_id = row[0]
         question_text = row[1]
-        questions[question_id] = {}
-        questions[question_id]['text'] = question_text
+        questions["question_" + str(i)] = {}
+        questions["question_" + str(i)]['question_text'] = question_text
+        
+        # Save in question_ids_session
+        question_ids_session["question_" + str(i)] = question_id
+
         #Get the choices for the corresponding Question Id from the Has_Choice table
-        cursor1.execute('select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = %s',(question_id))
+        query = 'select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = \'' + str(question_id) + '\''
+        print query
+        cursor1.execute(query)
+        j=0
+        question_option_ids_session['question_' + str(i)] = {}
         for choices in cursor1.fetchall():
+            j+=1
             choice_id = choices[0]
             choice_text = choices[1]
-            questions[question_id][choice_id] = choice_text
+            # Save in session the mapping
+            question_option_ids_session['question_' + str(i)]['option_' + str(j)] = choice_id
+            questions["question_" + str(i)]["option_" + str(j)] = choice_text
 
     questions["is_survey"] = "True"
+    request.session['question_ids'] = question_ids_session
+    request.session['question_option_ids'] = question_option_ids_session
     return questions
 
 def insert_into_response(choice_id,question_id,survey_id,text):
     cursor = connection.cursor()
-    cursor.execute("Insert into Response(choice_id,question_id,survey_id,text) values(%s,%s,%s,%s)",(choice_id,question_id,survey_id,text))
+    query = "Insert into Response(choice_id,question_id,survey_id,text) values(\
+        '" + str(choice_id) + "','" + str(question_id) + "','" + str(survey_id) + "','" + str(text) + "')"
+    print query
+    cursor.execute(query)
 
-def get_final_questions(bill_id,restaurant_id,category,user_id):
+def get_final_questions(bill_id,restaurant_id,category,user_id,request):
     cursor = connection.cursor()
     cursor1 = connection.cursor()
 
-    cursor.execute('select * from Question q where q.category = %s and q.id not in \
+    query = 'select * from Question q where q.category = \'' + category +'\'and q.id not in \
             (select question_id from Response r,Survey s where r.survey_id = s.id \
-            and s.user_id = %s and s.restaurant_id = %s',(category,user_id,restaurant_id))
+            and s.user_id = \''+ str(user_id) + '\'and s.restaurant_id = \'\
+            '+ str(restaurant_id) + '\')'
+    print query
+    cursor.execute(query)
+
+    #Resetting the sessions to null
+    request.session['question_ids'] = {}
+    request.session['question_option_ids'] = {}
+    
+    # Initialize the dicts
+    question_ids_session = {}
+    question_option_ids_session = {}
+    questions = {}
+    i=0
+
+
+    #Counter to keep track of the number of questions to display
     cnt = 0
+
     for row in cursor.fetchall():
         #Fetch two questions from the list and then break
         if cnt == 2:
                 break
         question_id = row[0]
         question_text = row[1]
-        questions[question_id] = {}
-        questions[question_id]['text'] = question_text
-        #Get the choices for the corresponding Question Id from the Has_Choice table
-        cursor1.execute('select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = %s',(question_id))
+        i+=1
+        #Initialize the dict and set the question text.
+        questions["question_" + str(i)] = {}
+        questions["question_" + str(i)]['question_text'] = question_text
+
+        # Save in question_ids_session for future mapping.
+        question_ids_session["question_" + str(i)] = question_id
+
+        #Get the choices for the corresponding Question Id from the Has_Choice table        
+        query = 'select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = \'' + str(question_id) + '\''
+        print query
+        cursor1.execute(query)
+        j=0
+        question_option_ids_session['question_' + str(i)] = {}
         for choices in cursor1.fetchall():
-                choice_id = choices[0]
-                choice_text = choices[1]
-                questions[question_id][choice_id] = choice_text
+            j+=1
+            choice_id = choices[0]
+            choice_text = choices[1]
+            # Save in session the mapping
+            question_option_ids_session['question_' + str(i)]['option_' + str(j)] = choice_id
+            #Set the object questions which is to be returned.
+            questions["question_" + str(i)]["option_" + str(j)] = choice_text
         cnt+=1
 
 
     #Ask a question from the Bill
-    cursor.execute('select item_name from Has_Bill where bill_id = %s and restaurant_id = %s \
-        ORDER BY RAND()  LIMIT 1')
+    query = 'select item_name from Has_Bill where bill_id = \'' + str(bill_id)  + '\'and restaurant_id \
+    =\'' + restaurant_id  +'\'ORDER BY RAND()  LIMIT 1'
+    print query 
+    cursor.execute(query)
     first_entry = cursor.fetchone()
     item_name = first_entry[0]
+    
+    #Get the inserted id from the Question table after inserting.
     inserted_id = insert_into_question(item_name)
-    questions[inserted_id] = {}
+    question_text = "How would you rate " + item_name + "?"
+    i+=1
+    questions["question_" + str(i)] = {}
+    questions["question_" + str(i)]['question_text'] = question_text
+    # Save in question_ids_session for future mapping.
+    question_ids_session["question_" + str(i)] = inserted_id
+    question_option_ids_session['question_' + str(i)] = {}
     cursor.execute('select * from Choice where id>0 and id<6')
+    j=0
     for choices in cursor.fetchall():
+        j+=1
         choice_id = choices[0]
         choice_text = choices[1]
-        questions[inserted_id][choice_id] = choice_text
+        # Save in session the mapping
+        question_option_ids_session['question_' + str(i)]['option_' + str(j)] = choice_id
+        #Set the object questions which is to be returned.
+        questions["question_" + str(i)]["option_" + str(j)] = choice_text
 
-    #Ask a generic question for Other comments
-    other_comments = "Enter any additional comments:"
-    other_comments_id = 0
-    questions[other_comments_id]['text'] = other_comments
+    #TODO: Ask a generic question for Other comments
+    #other_comments = "Enter any additional comments:"
+    #other_comments_id = 0
+    #questions[other_comments_id]['text'] = other_comments
 
-    #Set the flag to indicate that no more surveys
-    questions["is_survey"] = "False"
+    request.session['question_ids'] = question_ids_session
+    request.session['question_option_ids'] = question_option_ids_session
+
+    #Set the flag to true
+    questions["is_survey"] = "True"
     return questions
 
 def insert_into_question(item_name):
     text = "How would you rate " + item_name + "?"
     cursor = connection.cursor()
-    cursor.execute("Insert into Question(text) values(%s)",(text))
+    one = 1
+    category = "dynamic"
+    query = 'Insert into Question(text,flag,category) values(\'' + text + '\',\'\
+            ' + str(one) + '\',\'' + str(category) + '\')' 
+    print query
+    cursor.execute(query)
     inserted_id = cursor.lastrowid
     return inserted_id
 
@@ -685,4 +821,4 @@ def delete_coupon(request):
     request.session['context'] = context
     print "Context object after setting coupons"
     print context
-    return HttpResponseRedirect('/home')
+    return HttpResponseRedirect('/home')   
