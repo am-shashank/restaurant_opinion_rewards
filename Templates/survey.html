@@ -27,13 +27,10 @@
       var form = document.getElementById("survey_form");
       for (var i = 1; typeof(form["question_" + i]) != "undefined"; i++) {
             for (var j = 0; j < form["question_" + i].length; j++) {
-<<<<<<< HEAD
                 if (form["question_" + i][j].checked) {
                     users_response["question_" + i] = "option_" + (j + 1);
-=======
                 if (form["question_" + i][j].checked) {                    
                     users_response["question_" + i] = "option_" + (j + 1) ;
->>>>>>> 5b4617006eb7a430bc91420d4569d13809742a9f
                 }
             }
         }
