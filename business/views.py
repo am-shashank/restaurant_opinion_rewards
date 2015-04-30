@@ -7,7 +7,7 @@ from django.template import RequestContext
 from django.db import connection
 from datetime import datetime
 from django.http import JsonResponse
-#import pyqrcode
+import pyqrcode
 # Create your views here.
 
 @csrf_exempt
@@ -65,7 +65,7 @@ def get_favourite_items(request):
     favourite_items = {}
     cursor = connection.cursor()
     cursor.execute(
-        "select U.first_name as fn, U.last_name as ln, U.email em, B.item_name it " 
+        "select U.first_name as fn, U.last_name as ln, U.email em, B.item_name it "
         + "from Survey S, Has_Bill B, Checkin C, User U "
         + "where C.survey_id = S.id and B.bill_id = C.bill_id and U.id = S.user_id and C.restaurant_id = \"testID\" "
         + "group by U.first_name, U.last_name, B.item_name "
@@ -128,9 +128,28 @@ def user_likings(request):
     print row[0]
     return HttpResponse("")
 
-def home(request):
+@csrf_exempt
+@require_POST
+def get_overall_averages(request):
+    cursor = connection.cursor()
+    averages = {'ambience':0, 'food quality':0, 'service':0, 'Overall Rating':0}
+
+    for key in averages:
+        cursor.execute("select 6 - avg(R.choice_id) from Survey S, Question Q, Response R where R.question_id = Q.id and Q.text=\"" + key + "\";")
+        result = cursor.fetchall()
+        averages[key] = result[0][0]
+    return JsonResponse(averages)
+
+@csrf_exempt
+def get_no_checkins(request):
     request.session['restaurant_id'] = 'testID'
     restaurant_id = request.session['restaurant_id']
-
-    no_checkins = 'select count(*) from Checkin where restaurant_id=\''+restaurant_id+'\';'
-    
+    checkins_10days = {'count':0}
+    no_checkins = 'select count(*) from Checkin where restaurant_id=\''+restaurant_id+'\' and bill_id in (select id from Bill where time_stamp > date_sub(now(), interval 10 day) and restaurant_id=\''+restaurant_id+'\');'
+    print no_checkins
+    cursor = connection.cursor()
+    cursor.execute(no_checkins)
+    row = cursor.fetchone()
+    checkins_10days['count'] = row[0]
+    print row[0]
+    return JsonResponse(checkins_10days)

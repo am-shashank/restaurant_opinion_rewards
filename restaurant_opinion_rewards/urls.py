@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^business/create_bill', create_bill_render),
     url(r'^business/generate_bill', generate_bill),
     url(r'^business/get_overall_averages', get_overall_averages),
+    url(r'^business/get_no_checkins', get_no_checkins),
     url(r'^business/get_favourite_items', get_favourite_items),
     url(r'^business/home', TemplateView.as_view(template_name="business_login.html")),
     url(r'^business/user_likings',user_likings),
