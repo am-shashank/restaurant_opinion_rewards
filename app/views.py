@@ -14,8 +14,8 @@ from django.db import transaction
 from django.conf import settings
 import time
 import os
-import qrtools
-import pyqrcode
+#import qrtools
+#import pyqrcode
 from django.http import JsonResponse
 
 cursor = connection.cursor()
@@ -37,45 +37,50 @@ def get_table_list(request):
     return HttpResponse(html)
 
 
+@csrf_exempt
+def insert(request):
+    return HttpResponseRedirect('/signup')
+
+@csrf_exempt
+def display(request):
+    return HttpResponseRedirect('/index')
+
+@csrf_exempt
+@require_POST
 def signup(request):
+    print "Signup function is getting executed"
+
     signup_data = request.POST
-    id = signup_data.get('id')
-    first_name = signup_data.get('first_name')
-    last_name = signup_data.get('last_name')
+    id = signup_data.get('username')
+    first_name = signup_data.get('firstname')
+    last_name = signup_data.get('lastname')
     dob = signup_data.get('dob')
     email = signup_data.get('email')
     password = signup_data.get('password')
     # facebook_id = signup_data.get('facebook_id')
-    phone = signup_data.get('phone')
-    users = User.objects.all()
+    telephone = signup_data.get('phone')
     message = ""
-    for user in users:
-        if user.id == id:
-            message = "Account already exists. Please login here. <a href=" // ">Login</a>"
-            return HttpResponse(message)
 
+    credit = 0
+    print "It's a new account"
     # create new User and save it.
-    new_user = User(
-        id=id,
-        first_name=first_name,
-        last_name=last_name,
-        dob=dob,
-        email=email,
-        credit=0
-    )
-    new_user.save()
+    cursor = connection.cursor()
+    try:
+        cursor.execute('insert into User(id, first_name, last_name, dob, email, credit, telephone) values(%s, %s, %s, %s, %s, %s, %s)', (id, first_name, last_name, dob, email, credit, telephone))
+    except:
+        return HttpResponse("Error inserting to database. Please Try again!")
+    try:
+        cursor.execute('insert into Login(user_id, password) values(%s, %s)', (id, password))
+    except:
+        return HttpResponse("Username already exists. Please try with a different username!")
+   
+    print "Created User"
 
     # create login credentials and save it
-    '''new_login = Login(
-        user=id,
-        facebook_id=facebook_id,
-        password=password)
-    new_login.save()'''
 
     # save friend list to database
 
     # TO DO: send welcome email
-    request.session['userid'] = id
     message = "Successfully created account."
     return HttpResponse(message)
 
@@ -85,8 +90,7 @@ def get_nearby_restaurants(latitude, longitude):
     startlat = float(latitude)
     startlng = float(longitude)
     cursor = connection.cursor()
-    cursor.execute(
-        'SELECT id,name,full_address,stars, latitude, longitude, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48', (startlat, startlng))
+    cursor.execute('SELECT id,name,full_address,stars, latitude, longitude, image_path, SQRT(POW(69.1 * (latitude - %s), 2) + POW(69.1 * (%s - longitude) * COS(latitude / 57.3), 2)) AS distance from Restaurant HAVING distance < 25 ORDER BY distance LIMIT 48',(startlat,startlng))
     results = cursor.fetchall()
     # 4 indicates number of columns in the grid on home.html
     total_required_results = len(results) - len(results) % 4
@@ -102,6 +106,7 @@ def get_nearby_restaurants(latitude, longitude):
         d['stars'] = row[3]
         d['latitude'] = row[4]
         d['longitude'] = row[5]
+        d['image_path'] = row[6]
         if i % 4 == 0:
             j += 1
             objects[str(j)] = {}
@@ -155,6 +160,8 @@ def login(request):
     if 'latitude' in login_data and 'longitude' in login_data:
         context["nearby_restaurants"] = get_nearby_restaurants(
             login_data.get('latitude'), login_data.get('longitude'))
+        request.session['users_latitude'] = login_data.get('latitude')
+        request.session['users_longitude'] = login_data.get('longitude')
     # set the entire session object
     request.session['context'] = context
     # test_query(request)
@@ -222,7 +229,7 @@ def send_referral(request):
         cursor.execute("insert into Refers(referer_id, referee_id, restaurant_id, referee_telephone) values(%s, %s \
         ,%s , %s)", (request.session['username'], referee_id, restaurant_id, phone_number))
         message = "Your friend has been sent a message and a coupon which can be redeemed at the restaurant. Once \
-        he checks into the restaurant. Your credit points will be increased."
+        you check into the restaurant. Both of your credit points will be increased."
     except:
         return HttpResponse('Database insertion failed.')
 
@@ -282,8 +289,15 @@ def logout(request):
 
 @csrf_exempt
 def search_clicked(request):
+    print "Inside search_clicked"
     search_data = request.POST
-    context = {}
+    print "latitude: " + str(search_data.get('latitude'))
+    print "longitue: " + str(search_data.get('longitude'))
+    if 'context' in request.session:
+        context = request.session['context']
+    else:
+        context = {}
+
     if 'latitude' in search_data and 'longitude' in search_data:
         context["nearby_restaurants"] = get_nearby_restaurants(
             search_data.get('latitude'), search_data.get('longitude'))
@@ -305,6 +319,8 @@ def checkin(request):
     restaurant = Restaurant.objects.get(id=restaurant_id)
     # context dictionary which will be used in
     context = {}
+    context['users_latitude'] = request.session['users_latitude']
+    context['users_longitude'] = request.session['users_longitude']
     context['restaurant'] = restaurant
     reviews = Review.objects.filter(restaurant_id=restaurant_id)
     i = 1
@@ -354,7 +370,7 @@ def survey(request):
     # call generate survey
     request.session['bill_id'] = bd.bill_id
     request.session['restaurant_id'] = restaurant_id
-    return HttpResponseRedirect('/generate_survey')
+    return render_to_response('survey.html')
 
 
 def save_uploaded_file(f, filename):
@@ -366,18 +382,6 @@ def save_uploaded_file(f, filename):
         for chunk in f.chunks():
             destination.write(chunk)
         destination.close()
-
-
-def generate_survey(request):
-    survey_data = request.POST
-    survey_id = survey_data.get('survey_id')
-    # check if survey id already exists in response
-    cursor = connection.cursor()
-    cursor.execute('select * from Response where survey_id = %s', (survey_id))
-    # if cursor.rowcount == 0: # send standard 4 questions
-
-    # else: # check the lowest ratings he gave and ask questions about that
-
 
 # class which parses the qrcode string and sets the bill data
 class BillData:
@@ -431,9 +435,209 @@ def get_reviews(request):
         response_object['review_' + str(i)] = row[0]
         i = i + 1
     return JsonResponse(response_object)
-
+"""
 def generate_qr_code(filename, text):
     filename = "database_images/qr_code/bill1.png"
     text = 'restaurant_name:name\nbill_id:id\nitem1:name; quantity:number; price:number\nitem2:name; quantity:number; price:number\ntotal:number\n'
     qr = pyqrcode.create(text)
     qr.png(filename, scale=6)
+"""
+@csrf_exempt
+def process_survey(request):
+    users_response = request.POST
+    print users_response['question_1']
+    # print "RESPONSE"
+    # print users_response
+
+
+
+
+
+
+
+
+def generate_survey(request):
+    user_id = request.session['username']
+    survey_id = request.session['survey_id']
+    bill_id = request.session['bill_id']
+    restaurant_id = request.session['restaurant_id']
+    cursor = connection.cursor()
+
+    # check if survey id already exists in response
+    if survey_id is None:
+        
+        
+        #Insert entry into Survey and saving the survey id in session
+        cursor.execute("Insert into Survey(user_id) values(%s)",(user_id))
+        survey_id = cursor.lastrowid
+        request.session['survey_id'] = survey_id
+
+        #Insert entry into Checkin Table
+        cursor.execute("Insert into Checkin(survey_id,bill_id,restaurant_id) values(%s,%s,%s)",survey_id,bill_id,restaurant_id)
+        
+        # send standard 4 questions
+        context['questions'] = get_questions("general")
+        return render_to_response("survey.html", RequestContext(request, context))
+
+    else:
+        survey_data = request.POST
+        question_ids = survey_data.get('question_ids').split('#')
+        choice_ids = survey_data.get('choice_ids').split('#')
+        text = survey_data.get('text')
+        question_choice_list = []
+        question_choice = ()
+        second_page = False
+        #Check if the response is for the first time or not.
+        if(question_ids[0] == 1):
+            second_page = True
+
+        #Iterate over all the responses of the user and store it in response table
+        for i in range(len(question_ids)):
+            if(choice_ids[i]>0):
+                text = "null"
+            else:
+                text = survey_data.get('text')                
+            question_choice = (question_ids[i],choice_ids[i])
+            question_choice_list.append(question_choice)
+            insert_into_response(choice_ids[i],question_ids[i],survey_id,text)
+        print "Data stored in Response table"
+
+        #Generate dyanamic Questions only if this is after the first page.        
+        if(second_page):
+            #Check the lowest ratings he gave and ask questions about that
+            question_choice_list.sort(key=lambda x: x[1])
+            if(question_choice_list[0][1] == 5):
+                #User is satisfied. So ask restaurant based questions.
+                context['questions'] = get_questions("restaurant")            
+                return render_to_response("survey.html", RequestContext(request, context))
+            else:
+                if(question_choice_list[0][1] < 5):
+                    cursor.execute('select category from Question where id = %s',(question_choice_list[0][0]))
+                    row = cursor.fetchone()
+                    category = row[3]
+                    context['questions'] = get_final_questions(bill_id,restaurant_id,category,user_id)
+                    return render_to_response("survey.html", RequestContext(request, context))
+
+
+def get_questions(category):
+    cursor = connection.cursor()
+    cursor1 = connection.cursor()
+    #Get the questions based on category
+    cursor.execute('select * from Question where category = %s',(category))
+    questions = {}
+    for row in cursor.fetchall():
+        question_id = row[0]
+        question_text = row[1]
+        questions[question_id] = {}
+        questions[question_id]['text'] = question_text
+        #Get the choices for the corresponding Question Id from the Has_Choice table
+        cursor1.execute('select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = %s',(question_id))
+        for choices in cursor1.fetchall():
+            choice_id = choices[0]
+            choice_text = choices[1]
+            questions[question_id][choice_id] = choice_text
+
+    questions["is_survey"] = "True"
+    return questions
+
+def insert_into_response(choice_id,question_id,survey_id,text):
+    cursor = connection.cursor()
+    cursor.execute("Insert into Response(choice_id,question_id,survey_id,text) values(%s,%s,%s,%s)",(choice_id,question_id,survey_id,text))
+
+def get_final_questions(bill_id,restaurant_id,category,user_id):
+    cursor = connection.cursor()
+    cursor1 = connection.cursor()
+
+    cursor.execute('select * from Question q where q.category = %s and q.id not in \
+            (select question_id from Response r,Survey s where r.survey_id = s.id \
+            and s.user_id = %s and s.restaurant_id = %s',(category,user_id,restaurant_id))
+    cnt = 0
+    for row in cursor.fetchall():
+        #Fetch two questions from the list and then break
+        if cnt == 2:
+                break
+        question_id = row[0]
+        question_text = row[1]
+        questions[question_id] = {}
+        questions[question_id]['text'] = question_text
+        #Get the choices for the corresponding Question Id from the Has_Choice table
+        cursor1.execute('select c.id,c.text from Has_Choice h, Choice c where h.choice_id = c.id and h.question_id = %s',(question_id))
+        for choices in cursor1.fetchall():
+                choice_id = choices[0]
+                choice_text = choices[1]
+                questions[question_id][choice_id] = choice_text
+        cnt+=1
+
+
+    #Ask a question from the Bill
+    cursor.execute('select item_name from Has_Bill where bill_id = %s and restaurant_id = %s \
+        ORDER BY RAND()  LIMIT 1')
+    first_entry = cursor.fetchone()
+    item_name = first_entry[0]
+    inserted_id = insert_into_question(item_name)
+    questions[inserted_id] = {}
+    cursor.execute('select * from Choice where id>0 and id<6')
+    for choices in cursor.fetchall():
+        choice_id = choices[0]
+        choice_text = choices[1]
+        questions[inserted_id][choice_id] = choice_text
+
+    #Ask a generic question for Other comments
+    other_comments = "Enter any additional comments:"
+    other_comments_id = 0
+    questions[other_comments_id]['text'] = other_comments
+
+    #Set the flag to indicate that no more surveys
+    questions["is_survey"] = "False"
+    return questions
+
+def insert_into_question(item_name):
+    text = "How would you rate " + item_name + "?"
+    cursor = connection.cursor()
+    cursor.execute("Insert into Question(text) values(%s)",(text))
+    inserted_id = cursor.lastrowid
+    return inserted_id
+
+@csrf_exempt
+def delete_coupon(request):
+    coupon_data = request.POST
+    coupon_id = coupon_data.get('coupon_id')
+    print "Coupon Id : "+str(coupon_id)
+
+    try:
+        Coupons.objects.filter(id=coupon_id).delete()
+        print "deleted Coupon from Database : "+str(coupon_id)
+    except:
+        print "Error in deleteing coupon :"+str(coupon_id)+ " from Coupons Model."
+
+    if 'context' in request.session:
+        context = request.session['context']
+    else:
+        context = {}
+
+    coupons = {}
+    i = 1
+    for coupon in Coupons.objects.filter(user_id=request.session['username']):
+        coupons[str(i)] = {}
+        # check for expires or filter them using query
+        d = {}
+        d['id'] = coupon.id
+        d['query_string'] = "static/images/coupons/coupon"+str(coupon.id)+".jpeg"
+        print d['query_string']
+        # coupon.restaurant_id is actually restuarant object
+        d['restaurant_id'] = coupon.restaurant_id.id
+        try:
+            d['restaurant_name'] = coupon.restaurant_id.name
+        except Restaurant.DoesNotExist:
+            message = "restaurant does not exist"
+            return HttpResponse(message)
+        d['deal'] = coupon.deal
+        d['image_path'] = coupon.image_path
+        coupons[str(i)] = d
+        i += 1
+
+    context['coupons'] = coupons
+    request.session['context'] = context
+    print "Context object after setting coupons"
+    print context
+    return HttpResponseRedirect('/home')
