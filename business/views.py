@@ -29,6 +29,7 @@ def generate_bill(request):
     item2:'+item2+'; quantity:'+quantity2+'; price:'+price2+'\n\
     total:'+total+'\n\
     time:'+str(datetime.now().time().hour)
+    print text
     qr = pyqrcode.create(text)
     qr.png(filename, scale=6)
     return HttpResponse('QR Code succcessfully created')

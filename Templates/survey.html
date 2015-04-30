@@ -70,6 +70,10 @@
         else
         {
           $('#questions').html("Thank you for taking the survey.");
+          var credit = parseInt($('#credit').html());
+          credit = credit + 5;
+          var creditSpan = document.getElementById('credit');
+          creditSpan.innerHTML = credit.toString();
         }
 
       })
@@ -111,8 +115,8 @@
             <div class="column">
               <div class="statistic">
                 <div class="value">
-                  <i class="trophy icon"></i>
-                  {{ credit }}
+                  <i class="trophy icon" ></i>
+                  <span id="credit">{{ credit }}</span>
                 </div>
                 <div class="label">
                 Reward Points

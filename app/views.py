@@ -13,7 +13,7 @@ from django.db import connection
 from django.conf import settings
 import time
 import os
-#import qrtools
+import qrtools
 from random import randint
 import pyqrcode
 from django.http import JsonResponse
@@ -293,7 +293,8 @@ def logout(request):
 
     request.session.flush()
     print request.session
-    return HttpResponse('Success')
+    # return HttpResponse('Success')
+    return HttpResponseRedirect('/')
 
 
 @csrf_exempt
@@ -337,7 +338,6 @@ def checkin(request):
     return render_to_response("checkin.html", RequestContext(request, context))
 
 @csrf_exempt
-@require_POST
 def survey(request):
     if 'username' not in request.session:
         print "session not set"
@@ -354,9 +354,9 @@ def survey(request):
 
     # parse the decoded qr code string into a data structure
     bd = BillData(qr.data)
+    bd.printObj()
 
     cursor = connection.cursor()
-    print bd
     # get restaurant_id from restaurant name
     cursor.execute(
         'select id from Restaurant where name=\''+bd.restaurant_name+'\'')
@@ -368,12 +368,15 @@ def survey(request):
         return HttpResponse('Oops sorry. Restaurant was not found. Try later')
     try:
         query = 'insert into Bill(id, restaurant_id, amount, time) values('+bd.bill_id+',\''+restaurant_id+'\','+ bd.total+','+bd.time+');'
+        print query
         cursor.execute(query)
+        print "Query executed"
     except:
         return HttpResponse('Something wrong with the bill. use the correct QR Code')
     for i in range(len(bd.item_name)):
         try:
             query = 'insert into Has_Bill(item_name, restaurant_id, bill_id, quantity) values(\''+bd.item_name[i]+'\',\''+restaurant_id+'\','+ bd.bill_id+','+bd.item_quantity[i]+');'
+            print query
             cursor.execute(query)
         except:
             return HttpResponse('Something wrong with the bill. use the correct QR Code')
@@ -441,6 +444,7 @@ class BillData:
         self.item_quantity = []
         self.item_price = []
         for line in qrcode_text.splitlines():
+            line = line.strip()
             key_value = line.split(':', 2)
             if len(key_value) >= 2:
                 if key_value[0] == 'restaurant_name':
