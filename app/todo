@@ -1,6 +1,4 @@
 send welcome email to student once he signs up
-store coupon
-try 2 column signup form
 form validation
 forgot password (send text message/ email)
 hash passwords
@@ -8,7 +6,7 @@ check images in restaurants and coupons
 store images in NoSQL
 
 check if session exists in every function
-show reviews in checkin
+
 category could be made an index in question
 index on restaurant cos lookup by name in bill
 index on restaurant_id in Item cos lookup by restaurant_id

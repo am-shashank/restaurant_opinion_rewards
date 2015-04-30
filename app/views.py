@@ -13,6 +13,7 @@ from django.db import connection
 from django.conf import settings
 import time
 import os
+import hashlib
 
 import qrtools
 from random import randint
@@ -22,6 +23,8 @@ from django.http import JsonResponse
 
 cursor = connection.cursor()
 
+def get_md5hash(str):
+    return hashlib.md5(str).hexdigest()
 
 def current_datetime(request):
     now = datetime.datetime.now()
@@ -58,7 +61,7 @@ def signup(request):
     last_name = signup_data.get('lastname')
     dob = signup_data.get('dob')
     email = signup_data.get('email')
-    password = signup_data.get('password')
+    password = get_md5hash(signup_data.get('password'))
     # facebook_id = signup_data.get('facebook_id')
     telephone = signup_data.get('phone')
     message = ""
@@ -136,9 +139,11 @@ def login(request):
     # verify login credentials
 
     username = login_data.get('username')
-    password = login_data.get('password')
+    password = get_md5hash(login_data.get('password'))
+    print "password:" + password
     try:
         user = Login.objects.get(user_id=username)
+        print "table password:" + user.password
     except Login.DoesNotExist:
         message = "Account doesn't exist. Please create one here. <a href=\"/signup\">Login</a>"
         # return HttpResponseRedirect('/signup')
