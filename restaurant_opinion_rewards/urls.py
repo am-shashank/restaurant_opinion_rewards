@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^signup', TemplateView.as_view(template_name="signup.html")),
     url(r'^index', TemplateView.as_view(template_name="login.html")),
 
-    # methods
+    # user side methods
     url(r'^insert', insert),
     url(r'^create_user', signup),
     url(r'^search', search_clicked),
@@ -29,11 +29,13 @@ urlpatterns = [
     url(r'^delete_coupon', delete_coupon),
     url(r'^generate_survey', generate_survey),
     url(r'^generate_coupon', generate_coupon),
-    # business side
+
+    # business side methods
     url(r'^business/create_bill', create_bill_render),
     url(r'^business/generate_bill', generate_bill),
     url(r'^business/get_overall_averages', get_overall_averages),
     url(r'^business/get_favourite_items', get_favourite_items),
+    url(r'^business/home', TemplateView.as_view(template_name="business_login.html")),
 
     # default
     url(r'^', login),

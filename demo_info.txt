@@ -1,0 +1,7 @@
+ Complex Query
+ Indexing
+ Query Optimization
+ Normalization
+ Data cleaning
+ 
+

@@ -140,10 +140,8 @@ def login(request):
 
     username = login_data.get('username')
     password = get_md5hash(login_data.get('password'))
-    print "password:" + password
     try:
         user = Login.objects.get(user_id=username)
-        print "table password:" + user.password
     except Login.DoesNotExist:
         message = "Account doesn't exist. Please create one here. <a href=\"/signup\">Login</a>"
         # return HttpResponseRedirect('/signup')

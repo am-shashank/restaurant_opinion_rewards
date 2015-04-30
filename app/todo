@@ -1,7 +1,7 @@
 send welcome email to student once he signs up
 form validation
 forgot password (send text message/ email)
-hash passwords
+
 check images in restaurants and coupons
 store images in NoSQL
 
@@ -10,3 +10,7 @@ check if session exists in every function
 category could be made an index in question
 index on restaurant cos lookup by name in bill
 index on restaurant_id in Item cos lookup by restaurant_id
+age b+ index in User
+
+create index your_index_name on your_table_name(your_column_name) using HASH; or 
+create index your_index_name on your_table_name(your_column_name) using BTREE;
